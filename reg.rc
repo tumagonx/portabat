@@ -1,0 +1,154 @@
+#include <windef.h>
+
+/* Translation IDs. */
+#define STRING_USAGE            101
+#define STRING_ADD_USAGE        102
+#define STRING_DELETE_USAGE     103
+#define STRING_QUERY_USAGE      104
+#define STRING_SUCCESS          105
+#define STRING_INVALID_KEY      106
+#define STRING_INVALID_CMDLINE  107
+#define STRING_NO_REMOTE        108
+#define STRING_CANNOT_FIND      109
+#define STRING_UNSUPPORTED_TYPE 110
+#define STRING_MISSING_INTEGER  111
+#define STRING_MISSING_HEXDATA  112
+#define STRING_UNHANDLED_TYPE   113
+#define STRING_OVERWRITE_VALUE  114
+#define STRING_YESNO            115
+#define STRING_YES              116
+#define STRING_NO               117
+#define STRING_CANCELLED        118
+#define STRING_DEFAULT_VALUE    119
+#define STRING_DELETE_VALUE     120
+#define STRING_DELETE_VALUEALL  121
+#define STRING_DELETE_SUBKEY    122
+#define STRING_INVALID_STRING   123
+#define STRING_VALUEALL_FAILED  124
+#define STRING_GENERAL_FAILURE  125
+#define STRING_MATCHES_FOUND    126
+#define STRING_INVALID_SYNTAX   127
+#define STRING_INVALID_OPTION   128
+#define STRING_REG_HELP         129
+#define STRING_FUNC_HELP        130
+#define STRING_VALUE_NOT_SET    131
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Registry Console Tool"
+#define REACTOS_STR_INTERNAL_NAME     "reg"
+#define REACTOS_STR_ORIGINAL_FILENAME "reg.exe"
+/* #include <reactos/version.rc> */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_USAGE, "The syntax of this command is:\n\nREG [ ADD | DELETE | QUERY ]\nREG command /?\n"
+    STRING_ADD_USAGE, "REG ADD key_name [/v value_name | /ve] [/t type] [/s separator] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE key_name [/v value_name | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY key_name [/v value_name | /ve] [/s]\n"
+    STRING_SUCCESS, "The operation completed successfully\n"
+    STRING_INVALID_KEY, "reg: Invalid key name\n"
+    STRING_INVALID_CMDLINE, "reg: Invalid command line parameters\n"
+    STRING_NO_REMOTE, "reg: Unable to access remote machine\n"
+    STRING_CANNOT_FIND, "reg: The system was unable to find the specified registry key or value\n"
+    STRING_UNSUPPORTED_TYPE, "reg: Unsupported registry data type [%1]\n"
+    STRING_MISSING_INTEGER, "reg: The option [/d] must be followed by a valid integer\n"
+    STRING_MISSING_HEXDATA, "reg: The option [/d] must be followed by a valid hexadecimal value\n"
+    STRING_UNHANDLED_TYPE, "reg: Unhandled registry data type [/t 0x%1!x!, /d %2]\n"
+    STRING_OVERWRITE_VALUE, "The registry value '%1' already exists. Do you want to overwrite it?"
+    STRING_YESNO, " (Yes|No)"
+    STRING_YES, "Y"
+    STRING_NO, "N"
+    STRING_CANCELLED, "The registry operation was cancelled\n"
+    STRING_DEFAULT_VALUE, "(Default)"
+    STRING_DELETE_VALUE, "Are you sure you want to delete the registry value '%1'?"
+    STRING_DELETE_VALUEALL, "Are you sure you want to delete all registry values in '%1'?"
+    STRING_DELETE_SUBKEY, "Are you sure you want to delete the registry key '%1'?"
+    STRING_INVALID_STRING, "reg: The option [/d] must be followed by a valid string\n"
+    STRING_VALUEALL_FAILED, "reg: Unable to delete all registry values in '%1'. An unexpected error occurred.\n"
+    STRING_GENERAL_FAILURE, "reg: Unable to complete the specified operation. An unexpected error occurred.\n"
+    STRING_MATCHES_FOUND, "Search complete. Number of matches found: %1!d!\n"
+    STRING_INVALID_SYNTAX, "reg: Invalid syntax. "
+    STRING_INVALID_OPTION, "reg: Invalid option [%1]. "
+    STRING_REG_HELP, "Type ""REG /?"" for help.\n"
+    STRING_FUNC_HELP, "Type ""REG %1 /?"" for help.\n"
+    STRING_VALUE_NOT_SET, "(value not set)"
+}
+
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/da-DK.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ko-KR.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/lt-LT.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/nl-NL.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "lang/sl-SI.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif
