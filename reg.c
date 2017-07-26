@@ -21,12 +21,52 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
+#if defined( __MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR < 4
+typedef struct {
+DWORD style;
+DWORD dwExtendedStyle;
+WORD cdit;
+short x;
+short y;
+short cx;
+short cy;
+} DLGTEMPLATE;
+typedef CONST DLGTEMPLATE *LPCDLGTEMPLATEW;
+__MINGW_TYPEDEF_AW(LPCDLGTEMPLATE)
+WINUSERAPI int WINAPI LoadStringW (HINSTANCE hInstance, UINT uID, LPWSTR lpBuffer, int cchBufferMax);
+#define sprintfW swprintf
+#else
+#define sprintfW _swprintf
+#endif
 #include <winreg.h>
 #include <wincon.h>
 #include <shlwapi.h>
 //#include <wine/unicode.h>
 //#include <wine/debug.h>
 #include <errno.h>
+
+// remap wine to mingw
+#define strlenW wcslen
+#define strcatW wcscat
+#define strncmpiW _wcsnicmp
+#define strcmpW wcscmp
+#define strpbrkW wcspbrk
+#define strcpyW wcscpy
+#define strchrW wcschr
+#define tolowerW towlower
+#define strcmpiW _wcsicmp
+#define struprW _wcsupr
+#define strtoulW wcstoul
+#define toupperW towupper
+#define __ms_va_start va_start
+#define __ms_va_list va_list
+#define __ms_va_end va_end
+
+// no debug
+#define TRACE(...) do { } while(0)
+#define WARN(...) do { } while(0)
+#define WINE_FIXME(...) do { } while(0)
+#define ERR(...) do { } while(0)
 
 /* Translation IDs. */
 #define STRING_USAGE            101
@@ -60,27 +100,6 @@
 #define STRING_REG_HELP         129
 #define STRING_FUNC_HELP        130
 #define STRING_VALUE_NOT_SET    131
-
-#define strlenW wcslen
-#define strcatW wcscat
-#define strncmpiW _wcsnicmp
-#define strcmpW wcscmp
-#define strpbrkW wcspbrk
-#define strcpyW wcscpy
-#define strchrW wcschr
-#define tolowerW towlower
-#define sprintfW _swprintf
-#define strcmpiW _wcsicmp
-#define struprW _wcsupr
-#define strtoulW wcstoul
-#define toupperW towupper
-#define __ms_va_start va_start
-#define __ms_va_list va_list
-#define __ms_va_end va_end
-#define TRACE(...) do { } while(0)
-#define WARN(...) do { } while(0)
-#define WINE_FIXME(...) do { } while(0)
-#define ERR(...) do { } while(0)
 
 #define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
 
