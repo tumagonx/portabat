@@ -72,7 +72,7 @@ int main (int argc,char *argv[])
         return -1;
     }
 
-    fp1 = _wfopen (wargv[1], L"r");
+    fp1 = _wfopen (wargv[1], L"rb");
     if (fp1 == NULL) {
         printf("%s File can not be opened : \n", argv[1]);
         return -1;
@@ -87,7 +87,7 @@ int main (int argc,char *argv[])
         printf ("Given number of bytes can not be copy, due to file size.\n");
         return -1;
     }
-    fp2 = _wfopen (wargv[2], L"w");
+    fp2 = _wfopen (wargv[2], L"wb");
     if (fp2 == NULL) {
         wprintf (L"%s : can not be opened\n", wargv[2]);
         return -1;
