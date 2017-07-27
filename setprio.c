@@ -15,11 +15,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
+#ifdef __TINYC__
 typedef unsigned __int64 QWORD;
 #define BELOW_NORMAL_PRIORITY_CLASS 0x4000
 #define ABOVE_NORMAL_PRIORITY_CLASS 0x8000
-
+#endif
 EXTERN_C VOID CDECL PrintShortDateAndTime(SYSTEMTIME *st)
 {
   char cBuf[160];
