@@ -9,6 +9,7 @@ by Luigi Auriemma
 #include <string.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <windows.h>
 
 /*
 
@@ -86,10 +87,12 @@ void show_dump(unsigned char *data, unsigned int len, FILE *stream) {
 
 
 
-u_char *parse_key(u_char *data, int *size);
+u_char *parse_key(u_char *data, int *size, wchar_t *wdata);
 void std_err(void);
 
-
+#ifdef __TINYC__
+LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
+#endif
 
 int main(int argc, char *argv[]) {
     FILE    *inz,
@@ -100,8 +103,8 @@ int main(int argc, char *argv[]) {
             *l,
             *key,
             *k,
-            *kl,
-            *inf,
+            *kl;
+    wchar_t *inf,
             *outf;
 
     setbuf(stdout, NULL);
@@ -127,30 +130,32 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    inf  = argv[1];
-    outf = argv[2];
+    wchar_t** wargv = CommandLineToArgvW (GetCommandLineW(), &argc);
+
+    inf  = wargv[1];
+    outf = wargv[2];
 
     fprintf(stderr, "- input file: ");
-    if(!strcmp(inf, "-")) {
+    if(!wcscmp(inf, L"-")) {
         fprintf(stderr, "stdin\n");
         inz  = stdin;
     } else {
-        fprintf(stderr, "%s\n", inf);
-        inz  = fopen(inf, "rb");
+        fwprintf(stderr, L"%s\n", inf);
+        inz  = _wfopen(inf, L"rb");
     }
     if(!inz) std_err();
 
     fprintf(stderr, "- output file: ");
-    if(!strcmp(outf, "-")) {
+    if(!wcscmp(outf, L"-")) {
         fprintf(stderr, "stdout\n");
         outz = stdout;
     } else {
-        fprintf(stderr, "%s\n", outf);
-        outz = fopen(outf, "wb");
+        fwprintf(stderr, L"%s\n", outf);
+        outz = _wfopen(outf, L"wb");
     }
     if(!outz) std_err();
 
-    key = parse_key(argv[3], &len);
+    key = parse_key(argv[3], &len, wargv[3]);
     kl = key + len;
     fprintf(stderr, " (hex dump follows):\n");
     show_dump(key, len, stderr);
@@ -180,7 +185,7 @@ int main(int argc, char *argv[]) {
 
 
 
-u_char *parse_key(u_char *data, int *size) {
+u_char *parse_key(u_char *data, int *size, wchar_t *wdata) {
     FILE    *fd;
     struct  stat    xstat;
     int     i,
@@ -215,7 +220,7 @@ u_char *parse_key(u_char *data, int *size) {
         return(key);
     }
 
-    fd = fopen(data, "rb");
+    fd = _wfopen(wdata, L"rb");
     if(fd) {
         fprintf(stderr, "- file key");
         fstat(fileno(fd), &xstat);
