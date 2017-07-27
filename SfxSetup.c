@@ -36,7 +36,7 @@ static const char * const kExts[] =
   #ifdef UNDER_CE
   "cab",
   #endif
-  "hta",
+  "ps1",
   "vbs"
   "wsh"
 };
