@@ -1,3 +1,15 @@
+/*  General License for Open Source projects published by
+  Olof Lagerkvist - LTR Data.
+
+    Copyright (c) Olof Lagerkvist
+    http://www.ltr-data.se
+    olof@ltr-data.se
+
+  The above copyright notice shall be included in all copies or
+  substantial portions of the Software.
+  
+  modified as needed to compile with TinyCC */
+  
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
