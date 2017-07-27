@@ -7,9 +7,9 @@
 #include <string.h>
 #include <windows.h>
 
-//not available in TCC
+#ifdef __TINYC__
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
-
+#endif
 /** fseeko/ftello
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the mingw-w64 runtime package.

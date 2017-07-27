@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <windows.h>
 
-// TCC don't have it
+#ifdef __TINYC__
 BOOL IsUserAnAdmin(void);
-
+#endif
 int main(void) {
     if (IsUserAnAdmin()) {
             printf("1\n");

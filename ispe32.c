@@ -1,6 +1,8 @@
 // Public domain
 #include <windows.h>
+#ifdef __TINYC__
 LPWSTR*     WINAPI CommandLineToArgvW(LPCWSTR,int*);
+#endif
 int main(int argc,char *argv[]) {
     int pe32;
     if( argc < 2 ) {
