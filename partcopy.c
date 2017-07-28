@@ -61,10 +61,16 @@ int main (int argc,char *argv[])
 {
     FILE *fp1;
     FILE *fp2;
+    _off64_t insize = 0;
+    _off64_t initpos = 0;
+    _off64_t endpos = 0;
+    _off64_t times = 0;
     _off64_t count = 0;
-    _off64_t location = 0;
-    size_t totBytes = 0;
-    unsigned char data[1024];
+    _off64_t total = 0;
+    _off64_t written = 0;
+    unsigned int x = 4096;
+    int mod = 0;
+    unsigned char *data[4096];
     wchar_t** wargv = CommandLineToArgvW (GetCommandLineW(), &argc);
 
     if (argc < 5) {
@@ -79,24 +85,53 @@ int main (int argc,char *argv[])
     }
 
     fseeko64 (fp1, 0, SEEK_END);
-    count = ftello64 (fp1);
-    location = _atoi64 (argv[3]);        // offset of source file to copy
-    totBytes = _atoi64 (argv[4]);        // number of bytes to copy
+    insize = ftello64 (fp1);
+    initpos = _atoi64 (argv[3]);        // offset of source file to copy
+    total = _atoi64 (argv[4]);        // number of bytes to copy
 
-    if(count < (location + totBytes))    {
-        printf ("Given number of bytes can not be copy, due to file size.\n");
+    //multiplier
+    for (x; x >= 1; x *= .5) {
+        if (total >= x) {
+            times = total / x;
+            mod = total % x;
+            break;
+        }
+    }
+
+    if (insize <= initpos)    {
+        printf ("Error: nothing to do.\n");
         return -1;
     }
+    if (insize < (initpos + total))    {
+        total = insize - initpos;
+        printf ("Warning: 'size' is too big, will copying until end of input file.\n");
+    }
+
     fp2 = _wfopen (wargv[2], L"wb");
     if (fp2 == NULL) {
         wprintf (L"%s : can not be opened\n", wargv[2]);
         return -1;
     }
 
-    fseeko64 (fp1, location, SEEK_SET);
-    fread (data, totBytes, 1, fp1);
-    fwrite (data, totBytes, 1, fp2);
-    data[totBytes] = 0;
+    fseeko64 (fp1, initpos, SEEK_SET);
+    endpos = initpos + total;
+    while (initpos < endpos) {
+        if (count >= times) {
+            for (x; x >= 1; x *= .5) {
+                if (mod >= x) {
+                    mod -= x;
+                    break;
+                }
+            }
+        }
+        fread (data, 1, x, fp1);
+        fwrite (data, 1, x, fp2);
+        count += 1;
+        initpos = ftello64 (fp1);
+        //written = ftello64 (fp2);
+        //printf("written: %I64d\n",written);
+    }
+    data[4096] = 0;
     fclose (fp1);
     fclose (fp2);
     return 0;
