@@ -61,24 +61,20 @@ typedef struct _REPARSE_DATA_MOUNT_POINT
     BYTE Data[65536];
 } REPARSE_DATA_MOUNT_POINT, *PREPARSE_DATA_MOUNT_POINT;
 
-
-LPWSTR win_errmsgW(DWORD dwErrNo)
+LPSTR win_errmsgA(DWORD dwErrNo)
 {
-  LPWSTR errmsg = NULL;
+  LPSTR errmsg = NULL;
 
-  if (FormatMessageW(FORMAT_MESSAGE_MAX_WIDTH_MASK |
+  if (FormatMessageA(FORMAT_MESSAGE_MAX_WIDTH_MASK |
 		     FORMAT_MESSAGE_FROM_SYSTEM |
-		     FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		     NULL,
-		     dwErrNo,
+		     FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, dwErrNo,
 		     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		     (LPWSTR) &errmsg,
-		     0,
-		     NULL))
+		     (LPSTR)&errmsg, 0, NULL))
     return errmsg;
   else
     return NULL;
 }
+
 
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
 
@@ -170,9 +166,9 @@ int main(int argc, char *argv)
             switch (GetLastError())
             {
             case ERROR_INVALID_REPARSE_DATA:
-                fwprintf(stderr,
-                    L"The reparse data on %s is invalid.\n",
-                    wargv[1]);
+                fprintf(stderr,
+                    "The reparse data on %s is invalid.\n",
+                    argv[1]);
                 break;
 
             case ERROR_INVALID_PARAMETER:
@@ -189,14 +185,14 @@ int main(int argc, char *argv)
             case ERROR_NOT_A_REPARSE_POINT:
             case ERROR_DIRECTORY:
             case ERROR_DIR_NOT_EMPTY:
-                fwprintf(stderr,
-                    L"Not a reparse point: %s \r\n", wargv[1]);
+                fprintf(stderr,
+                    "Not a reparse point: %s \r\n", argv[1]);
                 break;
 
             default:
-                fwprintf(stderr,
-                    L"Error getting reparse data from %s: %s \r\n",
-                    wargv[1], win_errmsgW(GetLastError()));
+                fprintf(stderr,
+                    "Error getting reparse data from %s: %s \r\n",
+                    argv[1], win_errmsgA(GetLastError()));
             }
 
             return 1;
@@ -211,7 +207,7 @@ int main(int argc, char *argv)
 
         if ((iSize + 6 > sizeof(ReparseData.Data)) | (iSize == 0))
         {
-            fwprintf(stderr, L"Name is too long: %s\r\n", wargv[2]);
+            fprintf(stderr, "Name is too long: %s\r\n", argv[2]);
             return 4;
         }
 
@@ -230,7 +226,7 @@ int main(int argc, char *argv)
             switch (GetLastError())
             {
             case ERROR_INVALID_REPARSE_DATA:
-                fwprintf(stderr, L"Invalid target path: %s\r\n", wargv[2]);
+                fprintf(stderr, "Invalid target path: %s\r\n", argv[2]);
                 break;
 
             case ERROR_INVALID_PARAMETER:
@@ -252,9 +248,9 @@ int main(int argc, char *argv)
                 break;
 
             default:
-                fwprintf(stderr,
-                    L"Error joining %s to %s: %s\r\n",
-                    wargv[2], wargv[1], win_errmsgW(GetLastError()));
+                fprintf(stderr,
+                    "Error joining %s to %s: %s\r\n",
+                    argv[2], argv[1], win_errmsgA(GetLastError()));
             }
 
             CloseHandle(h);
@@ -274,8 +270,8 @@ int main(int argc, char *argv)
         switch (GetLastError())
         {
         case ERROR_INVALID_REPARSE_DATA:
-            fwprintf(stderr, L"The reparse data on %s is invalid.\r\n",
-                wargv[1]);
+            fprintf(stderr, "The reparse data on %s is invalid.\r\n",
+                argv[1]);
             return 1;
 
         case ERROR_INVALID_PARAMETER:
@@ -292,13 +288,13 @@ int main(int argc, char *argv)
         case ERROR_NOT_A_REPARSE_POINT:
         case ERROR_DIRECTORY:
         case ERROR_DIR_NOT_EMPTY:
-            fwprintf(stderr, L"Not a reparse point: %s\r\n", wargv[1]);
+            fprintf(stderr, "Not a reparse point: %s\r\n", argv[1]);
             break;
 
         default:
-            fwprintf(stderr,
-                L"Error getting reparse data from %s: %s\r\n",
-                wargv[1], win_errmsgW(GetLastError()));
+            fprintf(stderr,
+                "Error getting reparse data from %s: %s\r\n",
+                argv[1], win_errmsgA(GetLastError()));
         }
 
         return 1;
@@ -320,10 +316,10 @@ int main(int argc, char *argv)
         target_name.Buffer =
             (PWSTR)ReparseData.Data + ReparseData.NameOffset;
 
-        fwprintf(stdout,
-            L"%s -> %s\r\n",
-            wargv[1],
-            &target_name);
+        //fprintf(stdout,
+        //   "%s -> %s\r\n",
+        //    wargv[1],
+        //    &target_name);
 
         return 0;
     }

@@ -39,7 +39,7 @@ int main(int argc,char *argv[]) {
         }
     }
     else {
-            wprintf(L"Input error:\n%s\n", wargv[1]);
+            printf(L"Input error:\n%s\n", argv[1]);
             return -1;
     }
 }

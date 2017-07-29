@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <windows.h>
 
-//not available in TCC
+#ifdef __TINYC__
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
-
+#endif
 int main(int argc, char **argv) {
     if (argc < 3) {
         printf("Usage: %s [src] [dest]\n", argv[0]);

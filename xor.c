@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "stdin\n");
         inz  = stdin;
     } else {
-        fwprintf(stderr, L"%s\n", inf);
+        fprintf(stderr, "%s\n", argv[1]);
         inz  = _wfopen(inf, L"rb");
     }
     if(!inz) std_err();
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "stdout\n");
         outz = stdout;
     } else {
-        fwprintf(stderr, L"%s\n", outf);
+        fprintf(stderr, "%s\n", argv[2]);
         outz = _wfopen(outf, L"wb");
     }
     if(!outz) std_err();
