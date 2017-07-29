@@ -3,6 +3,8 @@
 #include <windows.h>
 #ifdef __TINYC__
 LPWSTR*     WINAPI CommandLineToArgvW(LPCWSTR,int*);
+#else
+#include <shellapi.h>
 #endif
 int main (int argc,char *argv[]) {
     int pe32;

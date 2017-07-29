@@ -8,6 +8,8 @@
 
 #ifdef __TINYC__
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
+#else
+#include <shellapi.h>
 #endif
 /** fseeko/ftello
  * This file has no copyright assigned and is placed in the Public Domain.
@@ -21,6 +23,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
 typedef long long _off64_t;
 #endif
 
+#ifndef __MINGW32__
 int fseeko64 (FILE* stream, _off64_t offset, int whence)
 {
   fpos_t pos;
@@ -55,17 +58,18 @@ _off64_t ftello64 (FILE * stream)
   else
    return ((_off64_t) pos);
 }
+#endif
 
 void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t outsize) {
     // 4096 is the typical sector size, make it twice
-    unsigned int x = 8192;
+    unsigned int x;
     unsigned char *data[8192];
     _off64_t times = 0;
     _off64_t count = 0;
     //_off64_t written = 0;
-    int mod = 0;
+    int mod;
     //multiplier
-    for (x; x >= 1; x *= .5) {
+    for (x = 8192; x >= 1; x *= .5) {
         if (outsize >= x) {
             times = outsize / x;
             mod = outsize % x;
@@ -74,7 +78,7 @@ void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t 
     }
     while (initpos < endpos) {
         if (count >= times) {
-            for (x; x >= 1; x *= .5) {
+            for (x = 8192; x >= 1; x *= .5) {
                 if (mod >= x) {
                     mod -= x;
                     break;
@@ -103,7 +107,6 @@ int main (int argc,char *argv[])
     _off64_t split = 0;
     unsigned int eof = 0;
     unsigned int pipeout = 0;
-    int mod = 0;
     wchar_t opath[_MAX_PATH];
     wchar_t odrive[_MAX_DRIVE];
     wchar_t odir[_MAX_DIR];
@@ -111,7 +114,7 @@ int main (int argc,char *argv[])
     wchar_t ofnamenum[_MAX_FNAME];
     wchar_t oext[_MAX_EXT];
     wchar_t iterator[128];
-    unsigned int i = 0;
+    unsigned int i;
     wchar_t** wargv = CommandLineToArgvW (GetCommandLineW(), &argc);
     setmode (fileno (stdout), O_BINARY);
     setbuf(stdout, NULL);
@@ -167,7 +170,7 @@ int main (int argc,char *argv[])
     if (split)
         split = insize / outsize;
 
-    for (i; i <= split; i++) {
+    for (i = 0; i <= split; i++) {
         wcscpy (ofnamenum, ofname);
         if (split) {
             _itow (i, iterator, 10);
@@ -184,7 +187,7 @@ int main (int argc,char *argv[])
             fp2 = _wfopen (opath, L"wb");
 
         if (fp2 == NULL) {
-            // TODO check disk space?
+            // TODO check disk space? GetDiskFreeSpaceEx
             if (!pipeout)
                 printf ("Error: output file can not be opened\n");
             return -1;

@@ -4,6 +4,8 @@
 
 #ifdef __TINYC__
 BOOL IsUserAnAdmin(void);
+#else
+#include <shlobj.h>
 #endif
 int main(void) {
     if (IsUserAnAdmin()) {

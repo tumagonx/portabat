@@ -30,12 +30,17 @@
 #define FSCTL_SET_REPARSE_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM,41,METHOD_BUFFERED,FILE_SPECIAL_ACCESS)
 #define FSCTL_GET_REPARSE_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM,42,METHOD_BUFFERED,FILE_ANY_ACCESS)
 #define FSCTL_DELETE_REPARSE_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM,43,METHOD_BUFFERED,FILE_SPECIAL_ACCESS)
+#else
+#include <winioctl.h>
+#include <shellapi.h>
+#endif
+
 typedef struct _UNICODE_STRING {
   USHORT Length;
   USHORT MaximumLength;
   PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
-#endif
+LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
 
 int fwprintf_line_length;
 void SetOemPrintFLineLength(HANDLE hConsole) {
@@ -46,8 +51,6 @@ void SetOemPrintFLineLength(HANDLE hConsole) {
     else
         fwprintf_line_length = 0;
 }
-
-#define win_perror
 
 typedef struct _REPARSE_DATA_MOUNT_POINT
 {
@@ -75,10 +78,7 @@ LPSTR win_errmsgA(DWORD dwErrNo)
     return NULL;
 }
 
-
-LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
-
-int main(int argc, char *argv)
+int main(int argc, char **argv)
 {
     REPARSE_DATA_MOUNT_POINT ReparseData = { 0 };
     HANDLE h;
@@ -138,7 +138,7 @@ int main(int argc, char *argv)
                 bDirectoryCreated = TRUE;
             else
             {
-                win_perror(argv[1]);
+                //win_perror(argv[1]);
                 return 3;
             }
 
@@ -150,7 +150,7 @@ int main(int argc, char *argv)
 
     if (h == INVALID_HANDLE_VALUE)
     {
-        win_perror(argv[1]);
+        //win_perror(argv[1]);
         return 3;
     }
 
