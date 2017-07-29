@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <string.h>
 #include <windows.h>
 
@@ -56,9 +57,9 @@ _off64_t ftello64 (FILE * stream)
 }
 
 void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t outsize) {
-    // 4096 is the typical sector size
-    unsigned int x = 4096;
-    unsigned char *data[4096];
+    // 4096 is the typical sector size, make it twice
+    unsigned int x = 8192;
+    unsigned char *data[8192];
     _off64_t times = 0;
     _off64_t count = 0;
     //_off64_t written = 0;
@@ -85,7 +86,7 @@ void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t 
         count += 1;
         initpos = ftello64 (fp1);
         //written = ftello64 (fp2);
-        //wprintf (L"writen: %I64d byte(s)\n", written);
+        //printf ("written: %I64d byte(s)\n", written);
     }
     data[4096] = 0;
     fclose (fp2);
@@ -101,6 +102,7 @@ int main (int argc,char *argv[])
     _off64_t outsize = 0;
     _off64_t split = 0;
     unsigned int eof = 0;
+    unsigned int pipeout = 0;
     int mod = 0;
     wchar_t opath[_MAX_PATH];
     wchar_t odrive[_MAX_DRIVE];
@@ -111,37 +113,49 @@ int main (int argc,char *argv[])
     wchar_t iterator[128];
     unsigned int i = 0;
     wchar_t** wargv = CommandLineToArgvW (GetCommandLineW(), &argc);
+    setmode (fileno (stdout), O_BINARY);
+    setbuf(stdout, NULL);
 
-    if (argc < 5) {
-        wprintf (L"Usage: %s [in] [out] [offset] [size]\n", wargv[0]);
+    if (argc != 5) {
+        printf ("Usage: %s [in] [out] [offset] [size]\n", argv[0]);
+        printf ("replace [offset] with [-] to split input file\n");
+        printf ("replace [size] with [-] to read remaining input file\n");
+        printf ("replace [out] with [-] to pipe output\n");
         return -1;
     }
 
     fp1 = _wfopen (wargv[1], L"rb");
     if (fp1 == NULL) {
-        wprintf (L"Error: %s can not be opened\n", wargv[1]);
+        printf ("Error: %s can not be opened\n", argv[1]);
         return -1;
     }
-
     fseeko64 (fp1, 0, SEEK_END);
     insize = ftello64 (fp1);
-    if (!wcscmp (wargv[3], L"-"))
+
+    if (!strcmp (argv[3], "-"))
         split = 1;
     else 
         initpos = _wtoi64 (wargv[3]);
-    if (wcscmp (wargv[3], L"0") && (!initpos) && (!split)) {
-        wprintf (L"Error: offset=%s\n", wargv[3]);
+    if (strcmp (argv[3], "0") && (!initpos) && (!split)) {
+        printf ("Error: offset=%s\n", argv[3]);
         return -1;
     }
 
-    if (!wcscmp (wargv[4], L"-")) {
+    if (!wcscmp (wargv[2], L"-"))
+        pipeout = 1;
+    if ((split + pipeout) == 2) {
+        printf ("Error: can not split into pipe\n");
+        return -1;
+    }
+
+    if (!strcmp (argv[4], "-")) {
         eof = 1;
         outsize = insize - initpos;
     }
     else 
         outsize = _wtoi64 (wargv[4]); 
     if ((outsize <= 0) || (eof + split == 2)) {
-        wprintf (L"Error: nothing to copy\n");
+        printf ("Error: nothing to copy\n");
         return -1;
     }
 
@@ -154,7 +168,6 @@ int main (int argc,char *argv[])
         split = insize / outsize;
 
     for (i; i <= split; i++) {
-        
         wcscpy (ofnamenum, ofname);
         if (split) {
             _itow (i, iterator, 10);
@@ -164,15 +177,29 @@ int main (int argc,char *argv[])
             endpos = ftello64(fp1) + outsize;
         }
         _wmakepath (opath, odrive, odir, ofnamenum, oext) ;
-        fp2 = _wfopen (opath, L"wb");
+
+        if (pipeout)
+            fp2 = stdout;
+        else
+            fp2 = _wfopen (opath, L"wb");
 
         if (fp2 == NULL) {
             // TODO check disk space?
-            wprintf (L"Error: %s can not be opened\n", opath);
+            if (!pipeout)
+                printf ("Error: output file can not be opened\n");
             return -1;
         }
-        wprintf (L"Writing: %s\n", opath);
+
         dowrite (fp1, fp2, initpos, endpos, outsize);
+
+        if (ferror(fp1)) {
+            printf ("Error: reading input\n");
+            return 1;
+        } 
+        else if (ferror(fp2)) {
+            printf ("Error: writing output\n");
+            return 1;
+        }
     }
     fclose (fp1);
     return 0;
