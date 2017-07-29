@@ -59,17 +59,17 @@ _off64_t ftello64 (FILE * stream)
    return ((_off64_t) pos);
 }
 #endif
-
+#define BUFFSIZE 8192
 void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t outsize) {
     // 4096 is the typical sector size, make it twice
     unsigned int x;
-    unsigned char *data[8192];
+    unsigned char *data[BUFFSIZE];
     _off64_t times = 0;
     _off64_t count = 0;
     //_off64_t written = 0;
     int mod;
     //multiplier
-    for (x = 8192; x >= 1; x *= .5) {
+    for (x = BUFFSIZE; x >= 1; x *= .5) {
         if (outsize >= x) {
             times = outsize / x;
             mod = outsize % x;
@@ -78,7 +78,7 @@ void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t 
     }
     while (initpos < endpos) {
         if (count >= times) {
-            for (x = 8192; x >= 1; x *= .5) {
+            for (x = BUFFSIZE; x >= 1; x *= .5) {
                 if (mod >= x) {
                     mod -= x;
                     break;
@@ -92,7 +92,7 @@ void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t 
         //written = ftello64 (fp2);
         //printf ("written: %I64d byte(s)\n", written);
     }
-    data[4096] = 0;
+    data[BUFFSIZE] = 0;
     fclose (fp2);
 }
 
