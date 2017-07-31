@@ -122,8 +122,9 @@ int main (int argc,char *argv[])
     if (argc != 5) {
         printf ("Usage: %s [in] [out] [offset] [size]\n", argv[0]);
         printf ("replace [offset] with [-] to split input file\n");
-        printf ("replace [size] with [-] to read remaining input file\n");
+        printf ("replace [size] with [-] to read remaining input\n");
         printf ("replace [out] with [-] to pipe output\n");
+        printf ("in split mode, [size] < 4096 is number of pieces\n");
         return -1;
     }
 
@@ -157,7 +158,11 @@ int main (int argc,char *argv[])
     }
     else 
         outsize = _wtoi64 (wargv[4]); 
-    if ((outsize <= 0) || (eof + split == 2)) {
+
+    if ((outsize < 4096) && (split))
+        outsize = (insize / outsize) + 1;
+
+    if ((outsize <= 0) || (eof + split == 2) || (outsize < insize) || (outsize > (insize - initpos))) {
         printf ("Error: nothing to copy\n");
         return -1;
     }
