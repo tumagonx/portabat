@@ -11,9 +11,9 @@
 #define _UNICODE
 #endif
 
-#ifdef _CONSOLE
+#define _CONSOLE
+
 #include <stdio.h>
-#endif
 #include <direct.h>
 #include <io.h>
 
@@ -48,6 +48,72 @@ static const char * const kNames[] =
   , "run"
   , "start"
 };
+typedef struct _SHITEMID {
+    USHORT cb;
+    BYTE abID[1];
+} SHITEMID;
+typedef struct _ITEMIDLIST {
+    SHITEMID mkid;
+} ITEMIDLIST;
+typedef ITEMIDLIST *LPITEMIDLIST;
+typedef struct _EnvMap {
+	int		CSIDL;
+	LPCWSTR	DIRID;
+} EnvMap, * PEnvMap;
+
+EnvMap CSIDLtoDIRID [] = {
+ 	{ 0x0024,				L"_10" }, //CSIDL_WINDOWS
+ 	{ 0x0025,				L"_11" }, //CSIDL_SYSTEM
+ 	{ 0x0014,				L"_20" }, //CSIDL_FONTS
+ 	{ 0x0025,				L"_25" }, //CSIDL_WINDOWS
+ 	{ 0x0028,				L"_53" }, //CSIDL_PROFILE
+ 	{ 0x0000,				L"_16384" }, //CSIDL_DESKTOP
+ 	{ 0x0002,				L"_16386" }, //CSIDL_PROGRAMS
+ 	{ 0x0005,				L"_16389" }, //CSIDL_PERSONAL
+ 	{ 0x0006,				L"_16390" }, //CSIDL_FAVORITES
+ 	{ 0x0007,				L"_16391" }, //CSIDL_STARTUP
+ 	{ 0x0008,				L"_16392" }, //CSIDL_RECENT
+ 	{ 0x0009,				L"_16393" }, //CSIDL_SENDTO
+ 	{ 0x000b,				L"_16395" }, //CSIDL_STARTMENU
+ 	{ 0x000d,				L"_16397" }, //CSIDL_MYMUSIC
+ 	{ 0x000e,				L"_16398" }, //CSIDL_MYVIDEO
+ 	{ 0x0010,				L"_16400" }, //CSIDL_DESKTOPDIRECTORY
+ 	{ 0x0013,				L"_16403" }, //CSIDL_NETHOOD
+ 	{ 0x0014,				L"_16404" }, //CSIDL_FONTS
+ 	{ 0x0015,				L"_16405" }, //CSIDL_TEMPLATES
+ 	{ 0x0016,				L"_16406" }, //CSIDL_COMMON_STARTMENU
+ 	{ 0x0017,				L"_16407" }, //CSIDL_COMMON_PROGRAMS
+ 	{ 0x0018,				L"_16408" }, //CSIDL_COMMON_STARTUP
+ 	{ 0x0019,				L"_16409" }, //CSIDL_COMMON_DESKTOPDIRECTORY
+ 	{ 0x001a,				L"_16410" }, //CSIDL_APPDATA
+ 	{ 0x001b,				L"_16411" }, //CSIDL_PRINTHOOD
+ 	{ 0x001c,				L"_16412" }, //CSIDL_LOCAL_APPDATA
+ 	{ 0x001f,				L"_16415" }, //CSIDL_COMMON_FAVORITES
+ 	{ 0x0020,				L"_16416" }, //CSIDL_INTERNET_CACHE
+ 	{ 0x0021,				L"_16417" }, //CSIDL_COOKIES
+ 	{ 0x0022,				L"_16418" }, //CSIDL_HISTORY
+ 	{ 0x0023,				L"_16419" }, //CSIDL_COMMON_APPDATA
+ 	{ 0x0024,				L"_16420" }, //CSIDL_WINDOWS
+ 	{ 0x0025,				L"_16421" }, //CSIDL_SYSTEM
+ 	{ 0x0026,				L"_16422" }, //CSIDL_PROGRAM_FILES
+ 	{ 0x0027,				L"_16423" }, //CSIDL_MYPICTURES
+ 	{ 0x0029,				L"_16425" }, //CSIDL_SYSTEMX86
+ 	{ 0x002a,				L"_16426" }, //CSIDL_PROGRAM_FILESX86
+ 	{ 0x002c,				L"_16428" }, //CSIDL_PROGRAM_FILES_COMMONX86
+ 	{ 0x0028,				L"_16424" }, //CSIDL_PROFILE
+ 	{ 0x002b,				L"_16427" }, //CSIDL_PROGRAM_FILES_COMMON
+ 	{ 0x002d,				L"_16429" }, //CSIDL_COMMON_TEMPLATES
+ 	{ 0x002e,				L"_16430" }, //CSIDL_COMMON_DOCUMENTS
+ 	{ 0x002f,				L"_16431" }, //CSIDL_COMMON_ADMINTOOLS
+ 	{ 0x0030,				L"_16432" }, //CSIDL_ADMINTOOLS
+ 	{ 0x0035,				L"_16437" }, //CSIDL_COMMON_MUSIC
+ 	{ 0x0036,				L"_16438" }, //CSIDL_COMMON_PICTURES
+ 	{ 0x0037,				L"_16439" }, //CSIDL_COMMON_VIDEO
+ 	{ 0x0038,				L"_16440" }, //CSIDL_RESOURCES
+ 	{ 0x003b,				L"_16443" }, //CSIDL_CDBURN_AREA
+};
+__declspec(dllimport) HRESULT WINAPI SHGetSpecialFolderLocation (HWND, int, LPITEMIDLIST *);
+__declspec(dllimport) int WINAPI SHGetPathFromIDListW (LPITEMIDLIST, LPWSTR);
 
 static unsigned FindExt(const wchar_t *s, unsigned *extLen)
 {
@@ -259,12 +325,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   DWORD exitCode = 0;
   const wchar_t *workDir;
   wchar_t tempDir[MAX_PATH *3 + 2];
+  wchar_t envDir[MAX_PATH *3 + 2];
   wchar_t sfxDrive[_MAX_DRIVE];
   wchar_t sfxDir[_MAX_DIR * 3];
   wchar_t sfxFName[_MAX_FNAME + 5];
   wchar_t sfxExt[_MAX_EXT];
   wchar_t sfxDirPath[_MAX_PATH * 3 + 2];
-
+  int id;
+  HRESULT hr;
+  LPITEMIDLIST pidl = NULL;
+  BOOL b;
+  
   // alternate behavior
   //if (_isatty(_fileno(stdout)))
   //  if (_wgetenv(L"PROMPT") == NULL)
@@ -314,7 +385,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     #endif
   }
-
+  
+  
+  for( id = 0; id < (sizeof(CSIDLtoDIRID)/sizeof(CSIDLtoDIRID[0])); id++ )
+  {
+  hr = SHGetSpecialFolderLocation (NULL, CSIDLtoDIRID[id].CSIDL, &pidl);
+  if (hr == S_OK)
+    {
+      b = SHGetPathFromIDListW (pidl, envDir);
+      if (b)
+        SetEnvironmentVariableW(CSIDLtoDIRID[id].DIRID,envDir);
+      CoTaskMemFree (pidl);
+    }
+  }
   _wsplitpath(sfxPath, sfxDrive, sfxDir, sfxFName, sfxExt);
   _wmakepath(sfxDirPath, sfxDrive, sfxDir, NULL, NULL);
   SetEnvironmentVariableW(L"SFXPATH",sfxDirPath);
