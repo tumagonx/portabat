@@ -4,7 +4,7 @@
 #ifdef __TINYC__
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
 #else
-#inlude <shellapi.h>
+#include <shellapi.h>
 #endif
 int WINAPI WinMain(HINSTANCE hCurInstance, HINSTANCE hPrevInstance,
 		   LPSTR lpCmdLine, int nCmdShow)
