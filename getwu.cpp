@@ -98,7 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				updateItem->get_LastDeploymentChangeTime(&lastDate);
 				nixtime = (double)lastDate * 86400 - 2209161600;
 				gm = _gmtime64(&nixtime);
-				wprintf(L"\n%d. %s\nSize=%I64d\nDate=%sCtime:%d\nPriority=%d\nDelta=%d\nBeta=%d\n",i+1,updateName, maxDSize.Lo64, _wasctime(gm), nixtime, prioLevel, isDelta, isBeta);
+				wprintf(L"\n%d. %s\nSize=%I64d\nDate=%sPriority=%d\nDelta=%d\nBeta=%d\n",i+1,updateName, maxDSize.Lo64, _wasctime(gm), prioLevel, isDelta, isBeta);
         //wprintf(L"Description=%s\n", descString);
 			}
 		
