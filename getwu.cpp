@@ -1,3 +1,10 @@
+#ifndef _UNICODE
+#define _UNCODE
+#endif
+#ifndef UNICODE
+#define UNICODE
+#endif
+
 #include <time.h>
 #include <windows.h>
 #include <tchar.h>
@@ -6,7 +13,10 @@
 #include <wuerror.h>
 #include <shellapi.h>
 #include <wininet.h>
+
 #pragma comment(lib, "wininet.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleaut32.lib")
 
 //See https://stackoverflow.com/questions/12949018/windows-update-agent-pure-win32-apis
 
@@ -18,16 +28,10 @@ int _tmain(int argc, _TCHAR* argv[])
     HRESULT hr;
     hr = CoInitialize(NULL);
     int verbose = 0;
-
  
-    if (argc == 2) {
-      if (_tcscmp(argv[1], TEXT("-v")) == 0)
-        verbose = 1;
-    }
-       
-    if (!InternetCheckConnection(TEXT("http://www.microsoft.com"), FLAG_ICC_FORCE_CONNECTION , NULL)) {
+    if (!InternetCheckConnection(TEXT("http://www.windowsupdate.com"), FLAG_ICC_FORCE_CONNECTION , NULL)) {
       if (verbose)
-        wcout << L"Error connecting to microsoft.com..."<<endl;
+        wcout << L"Error connecting to microsoft..."<<endl;
       return 0;
       
     }
@@ -35,13 +39,22 @@ int _tmain(int argc, _TCHAR* argv[])
     IUpdateSession* iUpdate;
     IUpdateSearcher* searcher;
     ISearchResult* results;
-    BSTR criteria = SysAllocString(L"Type='Software' and IsInstalled=0");
+    BSTR criteria;
+    if (argc >= 2) {
+      if (_tcscmp(argv[1], TEXT("-v")) == 0)
+        verbose = 1;
+      else
+        if (argc == 2)
+          criteria = SysAllocString(argv[1]);
+      if (argc == 3) 
+          criteria = SysAllocString(argv[2]);
+    } else criteria = SysAllocString(L"Type='Software' and IsInstalled=0");
 
     hr = CoCreateInstance(CLSID_UpdateSession, NULL, CLSCTX_INPROC_SERVER, IID_IUpdateSession, (LPVOID*)&iUpdate);
     hr = iUpdate->CreateUpdateSearcher(&searcher);
     if (verbose)
-      wcout << L"Searching for updates ..."<<endl;
-    
+      wcout << L"Searching for updates..."<<endl;
+
     hr = searcher->Search(criteria, &results); 
     SysFreeString(criteria);
 
@@ -58,6 +71,10 @@ int _tmain(int argc, _TCHAR* argv[])
     case WU_E_INVALID_CRITERIA:
         if (verbose)
           wcout<<L"Invalid search criteria"<<endl;
+        return 0;
+    default:
+        if (verbose)
+          wcout << L"Error getting update catalog, please retry"<<endl;
         return 0;
     }
 
