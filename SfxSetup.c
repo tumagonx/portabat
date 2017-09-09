@@ -48,6 +48,7 @@ static const char * const kNames[] =
   , "run"
   , "start"
 };
+
 typedef struct _SHITEMID {
     USHORT cb;
     BYTE abID[1];
@@ -57,60 +58,60 @@ typedef struct _ITEMIDLIST {
 } ITEMIDLIST;
 typedef ITEMIDLIST *LPITEMIDLIST;
 typedef struct _EnvMap {
-	int		CSIDL;
-	LPCWSTR	DIRID;
+  int		CSIDL;
+  LPCWSTR	DIRID;
 } EnvMap, * PEnvMap;
 
 EnvMap CSIDLtoDIRID [] = {
- 	{ 0x0024,				L"_10" }, //CSIDL_WINDOWS
- 	{ 0x0025,				L"_11" }, //CSIDL_SYSTEM
- 	{ 0x0014,				L"_20" }, //CSIDL_FONTS
- 	{ 0x0025,				L"_25" }, //CSIDL_WINDOWS
- 	{ 0x0028,				L"_53" }, //CSIDL_PROFILE
- 	{ 0x0000,				L"_16384" }, //CSIDL_DESKTOP
- 	{ 0x0002,				L"_16386" }, //CSIDL_PROGRAMS
- 	{ 0x0005,				L"_16389" }, //CSIDL_PERSONAL
- 	{ 0x0006,				L"_16390" }, //CSIDL_FAVORITES
- 	{ 0x0007,				L"_16391" }, //CSIDL_STARTUP
- 	{ 0x0008,				L"_16392" }, //CSIDL_RECENT
- 	{ 0x0009,				L"_16393" }, //CSIDL_SENDTO
- 	{ 0x000b,				L"_16395" }, //CSIDL_STARTMENU
- 	{ 0x000d,				L"_16397" }, //CSIDL_MYMUSIC
- 	{ 0x000e,				L"_16398" }, //CSIDL_MYVIDEO
- 	{ 0x0010,				L"_16400" }, //CSIDL_DESKTOPDIRECTORY
- 	{ 0x0013,				L"_16403" }, //CSIDL_NETHOOD
- 	{ 0x0014,				L"_16404" }, //CSIDL_FONTS
- 	{ 0x0015,				L"_16405" }, //CSIDL_TEMPLATES
- 	{ 0x0016,				L"_16406" }, //CSIDL_COMMON_STARTMENU
- 	{ 0x0017,				L"_16407" }, //CSIDL_COMMON_PROGRAMS
- 	{ 0x0018,				L"_16408" }, //CSIDL_COMMON_STARTUP
- 	{ 0x0019,				L"_16409" }, //CSIDL_COMMON_DESKTOPDIRECTORY
- 	{ 0x001a,				L"_16410" }, //CSIDL_APPDATA
- 	{ 0x001b,				L"_16411" }, //CSIDL_PRINTHOOD
- 	{ 0x001c,				L"_16412" }, //CSIDL_LOCAL_APPDATA
- 	{ 0x001f,				L"_16415" }, //CSIDL_COMMON_FAVORITES
- 	{ 0x0020,				L"_16416" }, //CSIDL_INTERNET_CACHE
- 	{ 0x0021,				L"_16417" }, //CSIDL_COOKIES
- 	{ 0x0022,				L"_16418" }, //CSIDL_HISTORY
- 	{ 0x0023,				L"_16419" }, //CSIDL_COMMON_APPDATA
- 	{ 0x0024,				L"_16420" }, //CSIDL_WINDOWS
- 	{ 0x0025,				L"_16421" }, //CSIDL_SYSTEM
- 	{ 0x0026,				L"_16422" }, //CSIDL_PROGRAM_FILES
- 	{ 0x0027,				L"_16423" }, //CSIDL_MYPICTURES
- 	{ 0x0029,				L"_16425" }, //CSIDL_SYSTEMX86
- 	{ 0x002a,				L"_16426" }, //CSIDL_PROGRAM_FILESX86
- 	{ 0x002c,				L"_16428" }, //CSIDL_PROGRAM_FILES_COMMONX86
- 	{ 0x0028,				L"_16424" }, //CSIDL_PROFILE
- 	{ 0x002b,				L"_16427" }, //CSIDL_PROGRAM_FILES_COMMON
- 	{ 0x002d,				L"_16429" }, //CSIDL_COMMON_TEMPLATES
- 	{ 0x002e,				L"_16430" }, //CSIDL_COMMON_DOCUMENTS
- 	{ 0x002f,				L"_16431" }, //CSIDL_COMMON_ADMINTOOLS
- 	{ 0x0030,				L"_16432" }, //CSIDL_ADMINTOOLS
- 	{ 0x0035,				L"_16437" }, //CSIDL_COMMON_MUSIC
- 	{ 0x0036,				L"_16438" }, //CSIDL_COMMON_PICTURES
- 	{ 0x0037,				L"_16439" }, //CSIDL_COMMON_VIDEO
- 	{ 0x0038,				L"_16440" }, //CSIDL_RESOURCES
- 	{ 0x003b,				L"_16443" }, //CSIDL_CDBURN_AREA
+  { 0x0024,				L"_10" }, //CSIDL_WINDOWS
+  { 0x0025,				L"_11" }, //CSIDL_SYSTEM
+  { 0x0014,				L"_20" }, //CSIDL_FONTS
+  { 0x0025,				L"_25" }, //CSIDL_WINDOWS
+  { 0x0028,				L"_53" }, //CSIDL_PROFILE
+  { 0x0000,				L"_16384" }, //CSIDL_DESKTOP
+  { 0x0002,				L"_16386" }, //CSIDL_PROGRAMS
+  { 0x0005,				L"_16389" }, //CSIDL_PERSONAL
+  { 0x0006,				L"_16390" }, //CSIDL_FAVORITES
+  { 0x0007,				L"_16391" }, //CSIDL_STARTUP
+  { 0x0008,				L"_16392" }, //CSIDL_RECENT
+  { 0x0009,				L"_16393" }, //CSIDL_SENDTO
+  { 0x000b,				L"_16395" }, //CSIDL_STARTMENU
+  { 0x000d,				L"_16397" }, //CSIDL_MYMUSIC
+  { 0x000e,				L"_16398" }, //CSIDL_MYVIDEO
+  { 0x0010,				L"_16400" }, //CSIDL_DESKTOPDIRECTORY
+  { 0x0013,				L"_16403" }, //CSIDL_NETHOOD
+  { 0x0014,				L"_16404" }, //CSIDL_FONTS
+  { 0x0015,				L"_16405" }, //CSIDL_TEMPLATES
+  { 0x0016,				L"_16406" }, //CSIDL_COMMON_STARTMENU
+  { 0x0017,				L"_16407" }, //CSIDL_COMMON_PROGRAMS
+  { 0x0018,				L"_16408" }, //CSIDL_COMMON_STARTUP
+  { 0x0019,				L"_16409" }, //CSIDL_COMMON_DESKTOPDIRECTORY
+  { 0x001a,				L"_16410" }, //CSIDL_APPDATA
+  { 0x001b,				L"_16411" }, //CSIDL_PRINTHOOD
+  { 0x001c,				L"_16412" }, //CSIDL_LOCAL_APPDATA
+  { 0x001f,				L"_16415" }, //CSIDL_COMMON_FAVORITES
+  { 0x0020,				L"_16416" }, //CSIDL_INTERNET_CACHE
+  { 0x0021,				L"_16417" }, //CSIDL_COOKIES
+  { 0x0022,				L"_16418" }, //CSIDL_HISTORY
+  { 0x0023,				L"_16419" }, //CSIDL_COMMON_APPDATA
+  { 0x0024,				L"_16420" }, //CSIDL_WINDOWS
+  { 0x0025,				L"_16421" }, //CSIDL_SYSTEM
+  { 0x0026,				L"_16422" }, //CSIDL_PROGRAM_FILES
+  { 0x0027,				L"_16423" }, //CSIDL_MYPICTURES
+  { 0x0029,				L"_16425" }, //CSIDL_SYSTEMX86
+  { 0x002a,				L"_16426" }, //CSIDL_PROGRAM_FILESX86
+  { 0x002c,				L"_16428" }, //CSIDL_PROGRAM_FILES_COMMONX86
+  { 0x0028,				L"_16424" }, //CSIDL_PROFILE
+  { 0x002b,				L"_16427" }, //CSIDL_PROGRAM_FILES_COMMON
+  { 0x002d,				L"_16429" }, //CSIDL_COMMON_TEMPLATES
+  { 0x002e,				L"_16430" }, //CSIDL_COMMON_DOCUMENTS
+  { 0x002f,				L"_16431" }, //CSIDL_COMMON_ADMINTOOLS
+  { 0x0030,				L"_16432" }, //CSIDL_ADMINTOOLS
+  { 0x0035,				L"_16437" }, //CSIDL_COMMON_MUSIC
+  { 0x0036,				L"_16438" }, //CSIDL_COMMON_PICTURES
+  { 0x0037,				L"_16439" }, //CSIDL_COMMON_VIDEO
+  { 0x0038,				L"_16440" }, //CSIDL_RESOURCES
+  { 0x003b,				L"_16443" }, //CSIDL_CDBURN_AREA
 };
 __declspec(dllimport) HRESULT WINAPI SHGetSpecialFolderLocation (HWND, int, LPITEMIDLIST *);
 __declspec(dllimport) int WINAPI SHGetPathFromIDListW (LPITEMIDLIST, LPWSTR);
@@ -329,6 +330,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   wchar_t sfxDrive[_MAX_DRIVE];
   wchar_t sfxDir[_MAX_DIR * 3];
   wchar_t sfxFName[_MAX_FNAME + 5];
+  char sfxFNameA[_MAX_FNAME + 5];
   wchar_t sfxExt[_MAX_EXT];
   wchar_t sfxDirPath[_MAX_PATH * 3 + 2];
   int id;
@@ -400,6 +402,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   }
   _wsplitpath(sfxPath, sfxDrive, sfxDir, sfxFName, sfxExt);
   _wmakepath(sfxDirPath, sfxDrive, sfxDir, NULL, NULL);
+  wcstombs(sfxFNameA, sfxFName, sizeof(sfxFNameA));
   SetEnvironmentVariableW(L"SFXPATH",sfxDirPath);
   SetEnvironmentVariableW(L"SFX",wcscat(sfxFName,sfxExt));
   SetEnvironmentVariableW(L"WORKDIR",workDir);
@@ -407,6 +410,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   {
     unsigned i;
     DWORD d;
+
     winRes = GetTempPathW(MAX_PATH, path);
     if (winRes == 0 || winRes > MAX_PATH)
       return 1;
@@ -441,7 +445,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       {
         wcscat(path, WSTRING_PATH_SEPARATOR);
         pathLen = wcslen(path);
-		wcscpy(tempDir, path);
+        wcscpy(tempDir, path);
         break;
       }
       if (GetLastError() != ERROR_ALREADY_EXISTS)
@@ -462,10 +466,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   {
     if (!errorMessage)
       errorMessage = "Error";
-	if (_isatty(_fileno(stdout)))
-		PrintErrorMessage(errorMessage);
-	else
-		PrintErrorMessageBox(errorMessage);
+    if (_isatty(_fileno(stdout)))
+      PrintErrorMessage(errorMessage);
+    else
+      PrintErrorMessageBox(errorMessage);
     return 1;
   }
 
@@ -563,10 +567,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
           unsigned extLen;
           const WCHAR *name = temp + nameStartPos;
           unsigned len = (unsigned)wcslen(name);
+          char *fNames[] = {
+          sfxFNameA //unportable!
+          , "setup"
+          , "install"
+          , "run"
+          , "start"
+          };
           unsigned nameLen = FindExt(temp + nameStartPos, &extLen);
           unsigned extPrice = FindItem(kExts, sizeof(kExts) / sizeof(kExts[0]), name + len - extLen, extLen);
-          unsigned namePrice = FindItem(kNames, sizeof(kNames) / sizeof(kNames[0]), name, nameLen);
-
+          unsigned namePrice = FindItem((const char * const *)fNames, sizeof(fNames) / sizeof(fNames[0]), name, nameLen);
           unsigned price = namePrice + extPrice * 64 + (nameStartPos == 0 ? 0 : (1 << 12));
           if (minPrice > price)
           {
@@ -669,7 +679,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       STARTUPINFOW si;
       PROCESS_INFORMATION pi;
       WCHAR cmdLine[MAX_PATH * 3];
-
       wcscpy(cmdLine, path);
       wcscat(cmdLine, cmdLineParams);
       memset(&si, 0, sizeof(si));
@@ -683,13 +692,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       }
     }
     else if (useShellExecute == 2)
-	{
-	  STARTUPINFOW si;
+    {
+      STARTUPINFOW si;
       PROCESS_INFORMATION pi;
       WCHAR cmdLine[MAX_PATH * 3];
-
       wcscpy(cmdLine, L"rundll32.exe advpack.dll,LaunchINFSection ");
-	  wcscat(cmdLine, path);
+      wcscat(cmdLine, path);
       memset(&si, 0, sizeof(si));
       si.cb = sizeof(si);
       if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == 0)
@@ -700,25 +708,33 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         hProcess = pi.hProcess;
       }
     }
-	else if (0 <= useShellExecute <= 1)
+    else if (0 <= useShellExecute <= 1)
     {
       PROCESS_INFORMATION pi;
       WCHAR fcmdLine[MAX_PATH * 3 + 10];
-	  WCHAR roscmdLine[MAX_PATH * 3 + 10];
-	  WCHAR cmdLine[MAX_PATH * 3];
-	  STARTUPINFOW si = { 0 };
-	  si.cb = sizeof(si);
-	  si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-	  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-	  si.hStdOutput =  GetStdHandle(STD_OUTPUT_HANDLE);
-	  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-	  wcscpy(fcmdLine, L"/c ");
-      wcscpy(cmdLine, path);
-      wcscat(cmdLine, cmdLineParams);
-	  wcscat(fcmdLine, cmdLine);
-	  wcscpy(roscmdLine, tempDir);
-	  wcscat(roscmdLine, L"roscmd.exe");
-	  SetEnvironmentVariableW(L"COMSPEC",roscmdLine);
+      WCHAR roscmdLine[MAX_PATH * 3 + 10];
+      WCHAR newPATH[32767];
+      WCHAR oldPATH[32767];
+      STARTUPINFOW si = { 0 };
+      si.cb = sizeof(si);
+      si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+      si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+      si.hStdOutput =  GetStdHandle(STD_OUTPUT_HANDLE);
+      si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+      wcscpy(fcmdLine, L"/c ");
+      wcscat(fcmdLine, path);
+      wcscat(fcmdLine, cmdLineParams);
+      GetEnvironmentVariableW(L"PATH", oldPATH, sizeof(oldPATH));
+      wcscpy(newPATH, tempDir);
+      wcscat(newPATH, L"bin;");
+      wcscat(newPATH, oldPATH);
+      SetEnvironmentVariableW(L"PATH", newPATH);
+      wcscpy(roscmdLine, tempDir);
+      wcscat(roscmdLine, L"bin\\roscmd.exe");
+      if (DoesFileOrDirExist(roscmdLine)) {
+        SetEnvironmentVariableW(L"COMSPEC", roscmdLine);
+      } else
+        GetEnvironmentVariableW(L"COMSPEC", roscmdLine, sizeof(roscmdLine));
       memset(&si, 0, sizeof(si));
       si.cb = sizeof(si);
       if (CreateProcessW(roscmdLine, fcmdLine, NULL, NULL, FALSE, 0, NULL, workDir, &si, &pi) == 0)
@@ -729,7 +745,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         hProcess = pi.hProcess;
       }
     }
-	else if (3 < useShellExecute < 8)
+    else if (3 < useShellExecute < 8)
     {
       SHELLEXECUTEINFO ei;
       UINT32 executeRes;
@@ -788,12 +804,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
  
     if (errorMessage)
-	{
-	  if (_isatty(_fileno(stdout)))
-		PrintErrorMessage(errorMessage);
-	  else
-		PrintErrorMessageBox(errorMessage);
-	}
+    {
+      if (_isatty(_fileno(stdout)))
+        PrintErrorMessage(errorMessage);
+      else
+        PrintErrorMessageBox(errorMessage);
+    }
   }
   return 1;
 }
