@@ -63,12 +63,15 @@ int _tmain(int argc, _TCHAR* argv[])
 
     IUpdateCollection *updateList, *bundledList;
     IUpdate *updateItem, *bundledItem;
-    LONG updateSize, bundledSize, downloadSize;
-    BSTR updateName, urlString, descString;
+    IStringCollection *replacedIDs;
+    IUpdateIdentity *identity;
+    LONG updateSize, bundledSize, downloadSize, replacedSize;
+    BSTR updateName, urlString, descString, replacedID, identityID;
     IUpdateDownloadContentCollection *downloadList;
     IUpdateDownloadContent *downloadItem;
     VARIANT_BOOL deltaAvailable, deltaPreferred, isBeta;
     DownloadPriority prioLevel;
+    DeploymentAction actState;
     DECIMAL maxDSize, minDSize;
     DATE lastDate;
     int isDelta = 0;
@@ -83,7 +86,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		{
 			updateList->get_Item(i,&updateItem);
 			updateItem->get_BundledUpdates(&bundledList);
+			updateItem->get_SupersededUpdateIDs(&replacedIDs);
 			bundledList->get_Count(&bundledSize);
+			replacedIDs->get_Count(&replacedSize);
 			if (verbose) {
 				updateItem->get_Title(&updateName);
 				updateItem->get_Description(&descString);
@@ -93,13 +98,25 @@ int _tmain(int argc, _TCHAR* argv[])
 				updateItem->get_DeltaCompressedContentPreferred(&deltaPreferred);
 				if (deltaAvailable & deltaPreferred)
 					isDelta = 1;
+        updateItem->get_Identity(&identity);
+        identity->get_UpdateID(&identityID);
 				updateItem->get_DownloadPriority(&prioLevel);
 				updateItem->get_IsBeta(&isBeta);
+				updateItem->get_DeploymentAction(&actState);
 				updateItem->get_LastDeploymentChangeTime(&lastDate);
 				nixtime = (double)lastDate * 86400 - 2209161600;
 				gm = _gmtime64(&nixtime);
-				wprintf(L"\n%d. %s\nSize=%I64d\nDate=%sPriority=%d\nDelta=%d\nBeta=%d\n",i+1,updateName, maxDSize.Lo64, _wasctime(gm), prioLevel, isDelta, isBeta);
+				wprintf(L"\n%d. %s\nSize=%I64d\nDate=%sPriority=%d\nDelta=%d\nBeta=%d\nAction=%d\n",i+1,updateName, maxDSize.Lo64, _wasctime(gm), prioLevel, isDelta, isBeta, actState);
         //wprintf(L"Description=%s\n", descString);
+        wcout << L"ID=" << identityID << endl;
+        if (replacedSize > 0) {
+          wcout << L"Superseded ID(s):" << endl;
+          for (LONG i = 0; i < replacedSize; i++) {
+            replacedIDs->get_Item(i,&replacedID);
+            wcout << replacedID << endl;
+          }
+        }
+        wcout << L"Download URL(s):" << endl;
 			}
 		
 			if (bundledSize > 0)
