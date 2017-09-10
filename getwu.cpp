@@ -32,7 +32,7 @@ int _tmain(int argc, _TCHAR* argv[])
     if (!InternetCheckConnection(TEXT("http://www.windowsupdate.com"), FLAG_ICC_FORCE_CONNECTION , NULL)) {
       if (verbose)
         wcout << L"Error connecting to microsoft..."<<endl;
-      return 0;
+      return 1;
       
     }
 
@@ -67,15 +67,15 @@ int _tmain(int argc, _TCHAR* argv[])
     case WU_E_LEGACYSERVER:
         if (verbose)
           wcout<<L"No server selection enabled"<<endl;
-        return 0;
+        return 1;
     case WU_E_INVALID_CRITERIA:
         if (verbose)
           wcout<<L"Invalid search criteria"<<endl;
-        return 0;
+        return 1;
     default:
         if (verbose)
           wcout << L"Error getting update catalog, please retry"<<endl;
-        return 0;
+        return 1;
     }
 
     IUpdateCollection *updateList, *bundledList;

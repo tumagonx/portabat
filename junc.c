@@ -10,8 +10,12 @@
   
   modified as needed to compile with TinyCC */
 
+#ifndef UNICODE
 #define UNICODE
+#endif
+#ifndef _UNICODE
 #define _UNICODE
+#endif
 #define _WIN32_WINNT 0x0500
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -42,16 +46,6 @@ typedef struct _UNICODE_STRING {
   PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
-int fwprintf_line_length;
-void SetOemPrintFLineLength(HANDLE hConsole) {
-    CONSOLE_SCREEN_BUFFER_INFO con_info;
-    if (GetConsoleScreenBufferInfo(hConsole, &con_info)) {
-        fwprintf_line_length = con_info.srWindow.Right - con_info.srWindow.Left - 2;
-    }
-    else
-        fwprintf_line_length = 0;
-}
-
 typedef struct _REPARSE_DATA_MOUNT_POINT
 {
     DWORD ReparseTag;
@@ -64,20 +58,6 @@ typedef struct _REPARSE_DATA_MOUNT_POINT
     BYTE Data[65536];
 } REPARSE_DATA_MOUNT_POINT, *PREPARSE_DATA_MOUNT_POINT;
 
-LPSTR win_errmsgA(DWORD dwErrNo)
-{
-  LPSTR errmsg = NULL;
-
-  if (FormatMessageA(FORMAT_MESSAGE_MAX_WIDTH_MASK |
-		     FORMAT_MESSAGE_FROM_SYSTEM |
-		     FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, dwErrNo,
-		     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		     (LPSTR)&errmsg, 0, NULL))
-    return errmsg;
-  else
-    return NULL;
-}
-
 int main(int argc, char **argv)
 {
     REPARSE_DATA_MOUNT_POINT ReparseData = { 0 };
@@ -86,7 +66,6 @@ int main(int argc, char **argv)
     BOOL bDirectoryCreated = FALSE;
     BOOL bRemoval = FALSE;
 
-    SetOemPrintFLineLength(GetStdHandle(STD_ERROR_HANDLE));
     wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
 
     if ((argc < 2) | (argc > 3))
@@ -116,6 +95,7 @@ int main(int argc, char **argv)
         bRemoval = TRUE;
         argc--;
         wargv++;
+        argv++;
     }
 
     if (bRemoval)
@@ -138,7 +118,6 @@ int main(int argc, char **argv)
                 bDirectoryCreated = TRUE;
             else
             {
-                //win_perror(argv[1]);
                 return 3;
             }
 
@@ -149,10 +128,7 @@ int main(int argc, char **argv)
     }
 
     if (h == INVALID_HANDLE_VALUE)
-    {
-        //win_perror(argv[1]);
         return 3;
-    }
 
     if (bRemoval)
     {
@@ -167,8 +143,8 @@ int main(int argc, char **argv)
             {
             case ERROR_INVALID_REPARSE_DATA:
                 fprintf(stderr,
-                    "The reparse data on %s is invalid.\n",
-                    argv[1]);
+                    "The reparse data on %S is invalid.\n",
+                    wargv[1]);
                 break;
 
             case ERROR_INVALID_PARAMETER:
@@ -186,13 +162,13 @@ int main(int argc, char **argv)
             case ERROR_DIRECTORY:
             case ERROR_DIR_NOT_EMPTY:
                 fprintf(stderr,
-                    "Not a reparse point: %s \r\n", argv[1]);
+                    "Not a reparse point: %S \r\n", wargv[1]);
                 break;
 
             default:
                 fprintf(stderr,
-                    "Error getting reparse data from %s: %s \r\n",
-                    argv[1], win_errmsgA(GetLastError()));
+                    "Error getting reparse data from %S\r\n",
+                    wargv[1]);
             }
 
             return 1;
@@ -207,7 +183,7 @@ int main(int argc, char **argv)
 
         if ((iSize + 6 > sizeof(ReparseData.Data)) | (iSize == 0))
         {
-            fprintf(stderr, "Name is too long: %s\r\n", argv[2]);
+            fprintf(stderr, "Name is too long: %S\r\n", wargv[2]);
             return 4;
         }
 
@@ -226,7 +202,7 @@ int main(int argc, char **argv)
             switch (GetLastError())
             {
             case ERROR_INVALID_REPARSE_DATA:
-                fprintf(stderr, "Invalid target path: %s\r\n", argv[2]);
+                fprintf(stderr, "Invalid target path: %S\r\n", wargv[2]);
                 break;
 
             case ERROR_INVALID_PARAMETER:
@@ -249,8 +225,8 @@ int main(int argc, char **argv)
 
             default:
                 fprintf(stderr,
-                    "Error joining %s to %s: %s\r\n",
-                    argv[2], argv[1], win_errmsgA(GetLastError()));
+                    "Error joining %S to %S\r\n",
+                    wargv[2], wargv[1]);
             }
 
             CloseHandle(h);
@@ -260,7 +236,7 @@ int main(int argc, char **argv)
 
             return 1;
         }
-
+        fprintf(stdout,"%S -> %S\r\n", wargv[1], wargv[2]);
         return 0;
     }
 
@@ -270,8 +246,8 @@ int main(int argc, char **argv)
         switch (GetLastError())
         {
         case ERROR_INVALID_REPARSE_DATA:
-            fprintf(stderr, "The reparse data on %s is invalid.\r\n",
-                argv[1]);
+            fprintf(stderr, "The reparse data on %S is invalid.\r\n",
+                wargv[1]);
             return 1;
 
         case ERROR_INVALID_PARAMETER:
@@ -288,13 +264,13 @@ int main(int argc, char **argv)
         case ERROR_NOT_A_REPARSE_POINT:
         case ERROR_DIRECTORY:
         case ERROR_DIR_NOT_EMPTY:
-            fprintf(stderr, "Not a reparse point: %s\r\n", argv[1]);
+            fprintf(stderr, "Not a reparse point: %S\r\n", wargv[1]);
             break;
 
         default:
             fprintf(stderr,
-                "Error getting reparse data from %s: %s\r\n",
-                argv[1], win_errmsgA(GetLastError()));
+                "Error getting reparse data from %S\r\n",
+                wargv[1]);
         }
 
         return 1;
@@ -307,6 +283,7 @@ int main(int argc, char **argv)
     }
     else
     {
+        
         UNICODE_STRING target_name;
 
         target_name.MaximumLength =
@@ -316,10 +293,7 @@ int main(int argc, char **argv)
         target_name.Buffer =
             (PWSTR)ReparseData.Data + ReparseData.NameOffset;
 
-        //fprintf(stdout,
-        //   "%s -> %s\r\n",
-        //    wargv[1],
-        //    &target_name);
+        fprintf(stdout,"%S -> %S\r\n", wargv[1], target_name.Buffer);
 
         return 0;
     }
