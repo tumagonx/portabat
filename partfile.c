@@ -67,9 +67,9 @@ void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t 
     _off64_t times = 0;
     _off64_t count = 0;
     //_off64_t written = 0;
-    int mod;
+    _off64_t mod;
     //multiplier
-    for (x = BUFFSIZE; x >= 1; x *= .5) {
+    for (x = BUFFSIZE; x >= 1; x /= 2) {
         if (outsize >= x) {
             times = outsize / x;
             mod = outsize % x;
@@ -78,7 +78,7 @@ void dowrite (FILE *fp1, FILE *fp2, _off64_t initpos, _off64_t endpos, _off64_t 
     }
     while (initpos < endpos) {
         if (count >= times) {
-            for (x = BUFFSIZE; x >= 1; x *= .5) {
+            for (x = BUFFSIZE; x >= 1; x /= 2) {
                 if (mod >= x) {
                     mod -= x;
                     break;
