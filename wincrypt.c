@@ -1,32 +1,15 @@
 /* by hasherezade */
-#include <Windows.h>
-#ifndef __TINYC__
-#include <wincrypt.h>
-#else
-#define PROV_RSA_AES 24
-#define CRYPT_VERIFYCONTEXT 0xf0000000
-#define ALG_CLASS_HASH (4 << 13)
-#define ALG_TYPE_ANY (0)
-#define ALG_SID_SHA_256 12
-#define ALG_CLASS_DATA_ENCRYPT (3 << 13)
-#define ALG_TYPE_BLOCK (3 << 9)
-#define ALG_SID_AES_128 14
-#define CALG_SHA_256 (ALG_CLASS_HASH | ALG_TYPE_ANY | ALG_SID_SHA_256)
-#define CALG_AES_128 (ALG_CLASS_DATA_ENCRYPT|ALG_TYPE_BLOCK|ALG_SID_AES_128)
-typedef ULONG_PTR HCRYPTHASH;
-typedef ULONG_PTR HCRYPTKEY;
-typedef ULONG_PTR HCRYPTPROV;
-LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
-//TINYC has wrong FILE_FLAG_SEQUENTIAL_SCAN
-#ifdef FILE_FLAG_SEQUENTIAL_SCAN
-#undef FILE_FLAG_SEQUENTIAL_SCAN
-#define FILE_FLAG_SEQUENTIAL_SCAN 0x8000000
-#endif
-#endif
+
 #include <stdio.h>
-#pragma comment(lib, "advapi32.lib")
+#include <Windows.h>
+#include <shellapi.h>
 
 #define BLOCK_LEN 128
+
+#pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "shell32.lib")
+
+
 
 //params: <input file> <output file> <key> <is decrypt mode>
 int main( int argc, char *argv[])

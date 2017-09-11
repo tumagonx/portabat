@@ -2,33 +2,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <shellapi.h>
-#ifndef __TINYC__
-#include <Wincrypt.h>
-#else
-#define PROV_RSA_FULL 1
-#define PROV_RSA_AES 24
-#define CRYPT_VERIFYCONTEXT 0xf0000000
-#define ALG_CLASS_HASH (4 << 13)
-#define ALG_TYPE_ANY (0)
-#define ALG_SID_SHA_256 12
-#define ALG_SID_MD5 3
-#define ALG_CLASS_DATA_ENCRYPT (3 << 13)
-#define ALG_TYPE_BLOCK (3 << 9)
-#define ALG_SID_AES_128 14
-#define CALG_SHA_256 (ALG_CLASS_HASH | ALG_TYPE_ANY | ALG_SID_SHA_256)
-#define CALG_AES_128 (ALG_CLASS_DATA_ENCRYPT|ALG_TYPE_BLOCK|ALG_SID_AES_128)
-#define CALG_MD5 (ALG_CLASS_HASH | ALG_TYPE_ANY | ALG_SID_MD5)
-#define HP_HASHVAL 0x2
-typedef ULONG_PTR HCRYPTHASH;
-typedef ULONG_PTR HCRYPTKEY;
-typedef ULONG_PTR HCRYPTPROV;
-//TINYC has wrong FILE_FLAG_SEQUENTIAL_SCAN
-#ifdef FILE_FLAG_SEQUENTIAL_SCAN
-#undef FILE_FLAG_SEQUENTIAL_SCAN
-#define FILE_FLAG_SEQUENTIAL_SCAN 0x8000000
-#endif
-LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
-#endif
+
 #define BUFSIZE 1024
 
 #pragma comment(lib, "advapi32.lib")
