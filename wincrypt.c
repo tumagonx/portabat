@@ -3,13 +3,12 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <shellapi.h>
+#include <Wincrypt.h>
 
 #define BLOCK_LEN 128
 
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "shell32.lib")
-
-
 
 //params: <input file> <output file> <key> <is decrypt mode>
 int main( int argc, char *argv[])
