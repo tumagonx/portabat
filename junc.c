@@ -70,23 +70,9 @@ int main(int argc, char **argv)
 
     if ((argc < 2) | (argc > 3))
     {
-        fputs("Syntax 1 - Create a junction:\r\n"
-            "junc DIRECTORY TARGET\r\n"
-            "\n"
-            "Where DIRECTORY is an empty directory on an NTFS volume and TARGET is a native\r\n"
-            "path to a target directory, e.g. \"\\??\\C:\\Windows\", \"\\??\\D:\\\\\" or\r\n"
-            "\"\\Device\\Harddisk0\\Partition1\\\\\". Double quotes are optional unless the\r\n"
-            "path contains spaces. If the string ends with a backslash and you surround it\r\n"
-            "with quotes, you will need an extra backslash at the end of the string:\r\n"
-            "\\??\\D:\\ is equal to \"\\??\\D:\\\\\".\r\n"
-            "\n"
-            "Syntax 2 - Display where a junction points:\r\n"
-            "junc JUNCTION\r\n"
-            "\n"
-            "Syntax 3 - Remove a junction:\r\n"
-            "junc -r JUNCTION\r\n"
-            "The junction will be converted back to an empty directory.\r\n",
-            stderr);
+        printf("Usage:\ncreate: %S path_to_empty_directory \"\\??\\drive:\\\\path_to_target_directory\\\\\"\
+\ninfo  : %S path_to_junction_directory\ndelete: %S -r path_to_junction_directory\n\
+\nnote: junction directory will be created if not exist\n", wargv[0], wargv[0], wargv[0]);
         return 5;
     }
 
@@ -148,13 +134,12 @@ int main(int argc, char **argv)
                 break;
 
             case ERROR_INVALID_PARAMETER:
-                fputs("This OS does not support reparse points.\r\n"
-                    "Windows 2000 or higher is required.\r\n",
+                fputs("Need Windows 2000 or later.\r\n",
                     stderr);
                 break;
 
             case ERROR_INVALID_FUNCTION:
-                fputs("Reparse points are only supported on NTFS volumes.\r\n",
+                fputs("Need NTFS volumes.\r\n",
                     stderr);
                 break;
 
@@ -206,21 +191,19 @@ int main(int argc, char **argv)
                 break;
 
             case ERROR_INVALID_PARAMETER:
-                fputs("This OS does not support reparse points.\r\n"
-                    "Windows 2000 or higher is required.\r\n",
+                fputs("Need Windows 2000 or later.\r\n",
                     stderr);
                 break;
 
             case ERROR_INVALID_FUNCTION:
             case ERROR_NOT_A_REPARSE_POINT:
-                fputs("Reparse points are only supported on NTFS volumes.\r\n",
+                fputs("Need NTFS volumes.\r\n",
                     stderr);
                 break;
 
             case ERROR_DIRECTORY:
             case ERROR_DIR_NOT_EMPTY:
-                fputs("Reparse points can only created on empty "
-                    "directories.\r\n", stderr);
+                fputs("Directory is not empty.\r\n", stderr);
                 break;
 
             default:
@@ -251,13 +234,12 @@ int main(int argc, char **argv)
             return 1;
 
         case ERROR_INVALID_PARAMETER:
-            fputs("This OS does not support reparse points.\r\n"
-                "Windows 2000 or higher is required.\r\n",
+            fputs("Need Windows 2000 or later.\r\n",
                 stderr);
             break;
 
         case ERROR_INVALID_FUNCTION:
-            fputs("Reparse points are only supported on NTFS volumes.\r\n",
+            fputs("Need NTFS volumes.\r\n",
                 stderr);
             break;
 
@@ -278,7 +260,7 @@ int main(int argc, char **argv)
 
     if (ReparseData.ReparseTag != IO_REPARSE_TAG_MOUNT_POINT)
     {
-        fputs("This reparse point is not a junction.\r\n", stderr);
+        fputs("Not a junction.\r\n", stderr);
         return 2;
     }
     else
