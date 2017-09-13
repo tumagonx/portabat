@@ -10,6 +10,7 @@
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
 #else
 #include <shellapi.h>
+#include <shlwapi.h>
 #endif
 /** fseeko/ftello
  * This file has no copyright assigned and is placed in the Public Domain.
@@ -162,7 +163,7 @@ int main (int argc,char *argv[])
     if ((outsize < 4096) && (split))
         outsize = (insize / outsize) + 1;
 
-    if ((outsize <= 0) || (eof + split == 2) || (outsize < insize) || (outsize > (insize - initpos))) {
+    if ((outsize <= 0) || (eof + split == 2)) {
         printf ("Error: nothing to copy\n");
         return -1;
     }
@@ -179,13 +180,19 @@ int main (int argc,char *argv[])
         wcscpy (ofnamenum, ofname);
         if (split) {
             _itow (i, iterator, 10);
+            //wcscat (ofnamenum, "_"); bad for batch
             wcscat (ofnamenum, iterator);
             if (i == split)
                 outsize = insize % outsize;
             endpos = ftello64(fp1) + outsize;
         }
-        _wmakepath (opath, odrive, odir, ofnamenum, oext) ;
-
+        _wmakepath (opath, odrive, odir, ofnamenum, oext);
+        /*
+        if (PathIsDirectoryW(opath)) {
+            printf ("Error: output file is a directory\n");
+            return -1;
+        }
+        */
         if (pipeout)
             fp2 = stdout;
         else
