@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <direct.h>
 #include <io.h>
+#include <shlwapi.h>
 
 #include "../../7z.h"
 #include "../../7zAlloc.h"
@@ -23,6 +24,8 @@
 #include "../../7zFile.h"
 #include "../../CpuArch.h"
 #include "../../DllSecur.h"
+
+#pragma comment(lib, "shlwapi.lib")
 
 #define kInputBufSize ((size_t)1 << 18)
 
@@ -49,14 +52,6 @@ static const char * const kNames[] =
   , "start"
 };
 
-typedef struct _SHITEMID {
-    USHORT cb;
-    BYTE abID[1];
-} SHITEMID;
-typedef struct _ITEMIDLIST {
-    SHITEMID mkid;
-} ITEMIDLIST;
-typedef ITEMIDLIST *LPITEMIDLIST;
 typedef struct _EnvMap {
   int		CSIDL;
   LPCWSTR	DIRID;
@@ -726,6 +721,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       wcscat(fcmdLine, cmdLineParams);
       GetEnvironmentVariableW(L"PATH", oldPATH, sizeof(oldPATH));
       wcscpy(newPATH, tempDir);
+      PathRemoveBackslash(newPATH);
+      wcscat(newPATH, L";");
+      wcscat(newPATH, tempDir);
       wcscat(newPATH, L"bin;");
       wcscat(newPATH, oldPATH);
       SetEnvironmentVariableW(L"PATH", newPATH);
