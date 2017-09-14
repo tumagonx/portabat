@@ -161,7 +161,7 @@ int main (int argc,char *argv[])
         outsize = _wtoi64 (wargv[4]); 
 
     if ((outsize < 4096) && (split))
-        outsize = (insize / outsize) + 1;
+        outsize = (insize / outsize) + 1; //round up (may less than number of pieces)
 
     if ((outsize <= 0) || (eof + split == 2)) {
         printf ("Error: nothing to copy\n");
@@ -215,6 +215,10 @@ int main (int argc,char *argv[])
             printf ("Error: writing output\n");
             return 1;
         }
+        if (pipeout)
+            fflush (fp2);
+        else
+            fclose (fp2);
     }
     fclose (fp1);
     return 0;
