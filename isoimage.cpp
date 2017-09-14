@@ -70,8 +70,8 @@ int main(int argc, char ** argv) {
   if (FAILED(hres)) hres = image->ChooseImageDefaultsForMediaType(IMAPI_MEDIA_TYPE_DVDDASHR);
   if (FAILED(hres)) hres = image->ChooseImageDefaultsForMediaType(IMAPI_MEDIA_TYPE_DVDPLUSR);
   if (FAILED(hres)) hres = image->ChooseImageDefaultsForMediaType(IMAPI_MEDIA_TYPE_CDR);
-  if (SUCCEEDED(hres)) hres = image->get_Root(&root);
-  else { printf ("Setting: Media type failed\n"); return 1; }
+  if (FAILED(hres)) printf ("Setting: Media type failed\n"); //try keep continue
+  hres = image->get_Root(&root);
   if (isbootable) {
     if (SUCCEEDED(hres)) hres = CoCreateInstance(CLSID_BootOptions, NULL, CLSCTX_ALL, __uuidof(IBootOptions), (void**)&bootopt);
     else { printf ("Init: Root failed\n"); return 1; }
@@ -91,9 +91,7 @@ int main(int argc, char ** argv) {
   if (SUCCEEDED(hres)) hres = image->CreateResultImage(&result);
   else { printf ("Error: Adding content %S failed\n", wargv[1]); return 1; }
   if (SUCCEEDED(hres)) hres = result->get_ImageStream(&r_i);
-  else { printf ("Error: Creation failed\n"); return 1; }
-
-  if (FAILED(hres)){ printf("Error: Getting image to write failed\n"); return 1; }
+  else { printf ("Error: Building image failed\n"); return 1; }
 
   LONG numFiles = 0;
   LONG numDirs = 0;
