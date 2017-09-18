@@ -1,21 +1,3 @@
-/*
-    gendef - Generate list of exported symbols from a Portable Executable.
-    Copyright (C) 2009, 2010, 2011, 2012, 2013  mingw-w64 project
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /* Assumption: ispe is 32bit and OS is at minimum XP (no OS2 and POSIX emulation)
  * This app return error if file not a PE, 
  * or if PE but not "executable" with respect to Windows bitness
@@ -37,6 +19,23 @@ BOOL WINAPI IsWow64Process(LPCTSTR, PBOOL);
 
 
 // copied from mingw-w64 gendef
+/*
+    Copyright (C) 2009, 2010, 2011, 2012, 2013  mingw-w64 project
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 static PVOID revert; /*revert pointer*/
 static HMODULE kernel32handle;
 typedef WINBOOL (__stdcall (*redirector))(PVOID *);
@@ -65,7 +64,7 @@ void doredirect(const int redir) {
       atexit(undoredirect);
   }
 }
-
+// end of gendef chunk
 
 
 typedef struct _PETYPE {
@@ -116,6 +115,5 @@ int main (int argc,char *argv[]) {
       }
     }
   undoredirect();
-  printf ("Not Executable\n");
   return 1;
 }
