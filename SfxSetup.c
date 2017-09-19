@@ -13,10 +13,11 @@
 
 #define _CONSOLE
 
+#include <shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
 #include <stdio.h>
 #include <direct.h>
 #include <io.h>
-#include <shlwapi.h>
 
 #include "../../7z.h"
 #include "../../7zAlloc.h"
@@ -24,8 +25,6 @@
 #include "../../7zFile.h"
 #include "../../CpuArch.h"
 #include "../../DllSecur.h"
-
-#pragma comment(lib, "shlwapi.lib")
 
 #define kInputBufSize ((size_t)1 << 18)
 
@@ -706,8 +705,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     else if (0 <= useShellExecute <= 1)
     {
       PROCESS_INFORMATION pi;
-      WCHAR fcmdLine[MAX_PATH * 3 + 10];
-      WCHAR roscmdLine[MAX_PATH * 3 + 10];
+      WCHAR fcmdLine[32767];
+      WCHAR roscmdLine[32767];
+      WCHAR cwdHERE[32767];
+      WCHAR cwDir[32767];
       WCHAR newPATH[32767];
       WCHAR oldPATH[32767];
       STARTUPINFOW si = { 0 };
@@ -721,6 +722,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       wcscat(fcmdLine, cmdLineParams);
       GetEnvironmentVariableW(L"PATH", oldPATH, sizeof(oldPATH));
       wcscpy(newPATH, tempDir);
+      wcscpy(cwdHERE, tempDir);
+      wcscat(cwdHERE, L"cwd");
       PathRemoveBackslash(newPATH);
       wcscat(newPATH, L";");
       wcscat(newPATH, tempDir);
@@ -729,13 +732,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       SetEnvironmentVariableW(L"PATH", newPATH);
       wcscpy(roscmdLine, tempDir);
       wcscat(roscmdLine, L"bin\\roscmd.exe");
-      if (DoesFileOrDirExist(roscmdLine)) {
+      if (DoesFileOrDirExist(cwdHERE))
+        wcscpy(cwDir, tempDir);
+      else
+        wcscpy(cwDir, workDir);
+      if (DoesFileOrDirExist(roscmdLine))
         SetEnvironmentVariableW(L"COMSPEC", roscmdLine);
-      } else
+      else
         GetEnvironmentVariableW(L"COMSPEC", roscmdLine, sizeof(roscmdLine));
       memset(&si, 0, sizeof(si));
       si.cb = sizeof(si);
-      if (CreateProcessW(roscmdLine, fcmdLine, NULL, NULL, FALSE, 0, NULL, workDir, &si, &pi) == 0)
+      if (CreateProcessW(roscmdLine, fcmdLine, NULL, NULL, FALSE, 0, NULL, cwDir, &si, &pi) == 0)
         res = SZ_ERROR_FAIL;
       else
       {
