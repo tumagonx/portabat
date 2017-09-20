@@ -51,7 +51,6 @@ for /f "usebackq delims=" %%F in ("%DirDump%") do (
 	set Cab=%%~dpnxF
 	set Dest=%%~dpF
 	findstr /n /b "^MSCF" "%%~dpnxF">nul & if not errorlevel 1 (
-		title Extracting %%~nxF
 		echo Extracting %%~nxF...
 		if /i "%%~xF"==".cab" (
 			::if %WINVER% GEQ 6.0 (
@@ -67,7 +66,6 @@ for /f "usebackq delims=" %%F in ("%DirDump%") do (
 if not exist "%List%" goto end
 echo.Compressing:
 for /f "usebackq delims=" %%F in ("%List%") do (
-	title Compressing %%~nxF
 	echo Compressing %%~nxF...
 	makecab %Opt% /l "%%~dpF\" %%F>nul
 	if errorlevel 1 (echo %%~nxF:failed) else echo %%~nxF
@@ -95,7 +93,6 @@ set Inf=cab_%RANDOM%_
 set Rpt=cab_%RANDOM%_
 if "%~1"=="" goto :EOF
 :multiple
-title Preparing files...
 for /f "delims=/" %%I in ("none%~1") do if %%I==none goto help
 set SubPath=
 REM SendTo or CLI?
@@ -164,7 +161,6 @@ if defined Stop goto end
 if not defined Ddf (
 	set DiskLoc=%Dest%
 	if exist "%Dest%%BN%.cab" (
-		title Overwrite?
 		echo %Dest%%BN%.cab already exist!
 		echo Please specify name or Enter to overwrite..
 		call :askname
@@ -193,10 +189,9 @@ if defined Ddf (
 )
 ::cd /d %TmpDir%
 echo CabIt: %Input% of %Ins% input(s)
-title Compressing "%BN%.cab"...
 echo Compressing "%BN%.cab"...
 makecab /f "%Template%"
-if errorlevel 1 title Error! & pause & goto end
+if errorlevel 1 pause & goto end
 goto end
 
 :trim
@@ -260,7 +255,6 @@ echo -s Single file output mode (filter N/A)
 goto :EOF
 
 :end
-title CabIt - Finished
 echo CabIt - Finished
 rd /s /q "%TmpDir%">nul 2>&1
 del /q "%Inf%.inf">nul 2>&1
