@@ -15,12 +15,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
+#ifndef UNICODE
+#define UNICODE
+#endif
+#ifndef _UNICODE
+#define _UNICODE
+#endif
 #include <stdarg.h>
 #include <stdio.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
+#include <windows.h>
+#ifdef __TINYC__
+LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
+#else
+#include <shlwapi.h>
+#endif
 #if defined( __MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR < 4
 typedef struct {
 DWORD style;
@@ -36,11 +44,15 @@ __MINGW_TYPEDEF_AW(LPCDLGTEMPLATE)
 WINUSERAPI int WINAPI LoadStringW (HINSTANCE hInstance, UINT uID, LPWSTR lpBuffer, int cchBufferMax);
 #define sprintfW swprintf
 #else
+#ifdef __TINYC__
+#define sprintfW swprintf
+#else
 #define sprintfW _swprintf
+#endif
 #endif
 #include <winreg.h>
 #include <wincon.h>
-#include <shlwapi.h>
+
 //#include <wine/unicode.h>
 //#include <wine/debug.h>
 #include <errno.h>
@@ -1086,7 +1098,7 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
     return REG_INVALID;
 }
 
-int wmain(int argc, WCHAR *argvW[])
+int main(int argc, char **argv)
 {
     int i, op, op_help, ret;
     BOOL show_op_help = FALSE;
@@ -1095,6 +1107,7 @@ int wmain(int argc, WCHAR *argvW[])
     WCHAR *key_name, *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
     BOOL value_empty = FALSE, value_all = FALSE, recurse = FALSE, force = FALSE;
     HKEY root;
+    wchar_t** argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
 
     if (argc == 1)
     {
