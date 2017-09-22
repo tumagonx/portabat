@@ -34,17 +34,19 @@
 #define FSCTL_SET_REPARSE_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM,41,METHOD_BUFFERED,FILE_SPECIAL_ACCESS)
 #define FSCTL_GET_REPARSE_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM,42,METHOD_BUFFERED,FILE_ANY_ACCESS)
 #define FSCTL_DELETE_REPARSE_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM,43,METHOD_BUFFERED,FILE_SPECIAL_ACCESS)
-LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
-#else
-#include <winioctl.h>
-#include <shellapi.h>
-#endif
 
 typedef struct _UNICODE_STRING {
   USHORT Length;
   USHORT MaximumLength;
   PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
+
+LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR, int*);
+BOOL WINAPI RtlDosPathNameToNtPathName_U(PCWSTR , PUNICODE_STRING , PCWSTR *, VOID *);
+#else
+#include <winioctl.h>
+#include <shellapi.h>
+#endif
 
 typedef struct _REPARSE_DATA_MOUNT_POINT
 {
@@ -65,12 +67,13 @@ int main(int argc, char **argv)
     DWORD dw;
     BOOL bDirectoryCreated = FALSE;
     BOOL bRemoval = FALSE;
+    UNICODE_STRING targetPATH;
 
     wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
 
     if ((argc < 2) | (argc > 3))
     {
-        printf("Usage:\ncreate: %S path_to_empty_directory \"\\??\\drive:\\\\path_to_target_directory\\\\\"\
+        printf("Usage:\ncreate: %S emptyDir/nonexistentDir targetDir\
 \ninfo  : %S path_to_junction_directory\ndelete: %S -r path_to_junction_directory\n\
 \nnote: junction directory will be created if not exist\n", wargv[0], wargv[0], wargv[0]);
         return 5;
@@ -164,11 +167,13 @@ int main(int argc, char **argv)
 
     if (argc > 2)
     {
-        int iSize = (int)wcslen(wargv[2]) << 1;
+        RtlDosPathNameToNtPathName_U(wargv[2], &targetPATH, NULL, NULL);
+        int iSize = (int)wcslen(targetPATH.Buffer) << 1;
+        
 
         if ((iSize + 6 > sizeof(ReparseData.Data)) | (iSize == 0))
         {
-            fprintf(stderr, "Name is too long: %S\r\n", wargv[2]);
+            fprintf(stderr, "Name is too long: %S\r\n", targetPATH.Buffer);
             return 4;
         }
 
@@ -177,9 +182,9 @@ int main(int argc, char **argv)
         ReparseData.NameLength = (WORD)iSize;
         ReparseData.DisplayNameOffset = (WORD)(iSize + 2);
         ReparseData.DisplayNameLength = (WORD)iSize;
-        wcscpy((LPWSTR)ReparseData.Data, wargv[2]);
+        wcscpy((LPWSTR)ReparseData.Data, targetPATH.Buffer);
         wcscpy((LPWSTR)(ReparseData.Data + ReparseData.DisplayNameOffset),
-            wargv[2]);
+            targetPATH.Buffer);
 
         if (!DeviceIoControl(h, FSCTL_SET_REPARSE_POINT, &ReparseData,
             16 + iSize + 2 + iSize + 2, NULL, 0, &dw, NULL))
@@ -187,7 +192,7 @@ int main(int argc, char **argv)
             switch (GetLastError())
             {
             case ERROR_INVALID_REPARSE_DATA:
-                fprintf(stderr, "Invalid target path: %S\r\n", wargv[2]);
+                fprintf(stderr, "Invalid target path: %S\r\n", targetPATH.Buffer);
                 break;
 
             case ERROR_INVALID_PARAMETER:
@@ -209,7 +214,7 @@ int main(int argc, char **argv)
             default:
                 fprintf(stderr,
                     "Error joining %S to %S\r\n",
-                    wargv[2], wargv[1]);
+                    targetPATH.Buffer, wargv[1]);
             }
 
             CloseHandle(h);
@@ -219,7 +224,7 @@ int main(int argc, char **argv)
 
             return 1;
         }
-        fprintf(stdout,"%S -> %S\r\n", wargv[1], wargv[2]);
+        fprintf(stdout,"%S -> %S\r\n", wargv[1], targetPATH.Buffer);
         return 0;
     }
 
