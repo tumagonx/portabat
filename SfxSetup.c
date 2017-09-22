@@ -400,11 +400,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetEnvironmentVariableW(L"SFXPATH",sfxDirPath);
   SetEnvironmentVariableW(L"SFX",wcscat(sfxFName,sfxExt));
   SetEnvironmentVariableW(L"WORKDIR",workDir);
-
+  /* PATCH ME un7z: set condition when to be file extractor
+  if (wcsicmp(sfxFName, L"un7z") == 0)
+   */ 
   {
     unsigned i;
     DWORD d;
-
+    //PATCH ME un7z: replace GetTempPathW with GetCurrentDirectoryW or user argv[2]
     winRes = GetTempPathW(MAX_PATH, path);
     if (winRes == 0 || winRes > MAX_PATH)
       return 1;
@@ -466,7 +468,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       PrintErrorMessageBox(errorMessage);
     return 1;
   }
-
+  //PATCH ME un7z: replace sfxPath with user argv[1] 
   if (InFile_OpenW(&archiveStream.file, sfxPath) != 0)
   {
     errorMessage = "can not open input file";
@@ -475,12 +477,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   else
   {
     UInt64 pos = 0;
+    wchar_t buffer[65];
     if (!FindSignature(&archiveStream.file, &pos))
       res = SZ_ERROR_FAIL;
-    else if (File_Seek(&archiveStream.file, (Int64 *)&pos, SZ_SEEK_SET) != 0)
+    else if (File_Seek(&archiveStream.file, (Int64 *)&pos, SZ_SEEK_SET) != 0) 
       res = SZ_ERROR_FAIL;
     if (res != 0)
       errorMessage = "Can't find 7z archive";
+    _ui64tow(pos,buffer,10);
+    SetEnvironmentVariableW(L"SFXSIZE", buffer);
   }
 
   if (res == SZ_OK)
@@ -731,11 +736,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       wcscat(newPATH, oldPATH);
       SetEnvironmentVariableW(L"PATH", newPATH);
       wcscpy(roscmdLine, tempDir);
-      wcscat(roscmdLine, L"bin\\roscmd.exe");
+      wcscat(roscmdLine, L"bin\\cmd.exe");
       if (DoesFileOrDirExist(cwdHERE))
         wcscpy(cwDir, tempDir);
       else
         wcscpy(cwDir, workDir);
+      //PATCH ME add busybox bash 
       if (DoesFileOrDirExist(roscmdLine))
         SetEnvironmentVariableW(L"COMSPEC", roscmdLine);
       else
