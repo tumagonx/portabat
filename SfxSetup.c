@@ -399,7 +399,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       PrintErrorMessage("un7z.exe file [extractDir]");
       return 1;
     }
-    if ((!PathFileExists(wargv[1])) || (PathIsDirectoryW(wargv[1])))
+    if ((!DoesFileOrDirExist(wargv[1])) || (PathIsDirectoryW(wargv[1])))
     {
       PrintErrorMessage("file is not exists");
       return 1;
@@ -409,9 +409,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     {
       GetFullPathNameW(wargv[2], MAX_PATH * 3 + 2, path, NULL);
       if (!PathIsDirectoryW(path))
+      {
         if (SHCreateDirectoryExW(NULL, path, NULL) != ERROR_SUCCESS)
         {
-          PrintErrorMessage("cannot create extraction directory");
+          PrintErrorMessage("cannot create target");
+          return 1;
+        }
+      }
+      if (!PathIsDirectoryEmptyW(path))
+        {
+          PrintErrorMessage("target not empy");
           return 1;
         }
     }
@@ -616,7 +623,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             executeFileIndex = i;
             useShellExecute = extPrice;
           }
-         
           if (DoesFileOrDirExist(path))
           {
             errorMessage = "Duplicate file";
