@@ -14,10 +14,12 @@
 #define _CONSOLE
 
 #include <shlwapi.h>
-#pragma comment(lib, "shlwapi.lib")
+#include <Shlobj.h>
 #include <stdio.h>
 #include <direct.h>
 #include <io.h>
+
+#pragma comment(lib, "shlwapi.lib")
 
 #include "../../7z.h"
 #include "../../7zAlloc.h"
@@ -107,8 +109,6 @@ EnvMap CSIDLtoDIRID [] = {
   { 0x0038,				L"_16440" }, //CSIDL_RESOURCES
   { 0x003b,				L"_16443" }, //CSIDL_CDBURN_AREA
 };
-__declspec(dllimport) HRESULT WINAPI SHGetSpecialFolderLocation (HWND, int, LPITEMIDLIST *);
-__declspec(dllimport) int WINAPI SHGetPathFromIDListW (LPITEMIDLIST, LPWSTR);
 
 static unsigned FindExt(const wchar_t *s, unsigned *extLen)
 {
@@ -160,10 +160,10 @@ static BOOL WINAPI HandlerRoutine(DWORD ctrlType)
 
 static void PrintErrorMessage(const char *message)
 {
-  printf("\n7-Zip Error: %s\n", message);
-}
-static void PrintErrorMessageBox(const char *message)
-{
+  if (_wgetenv(L"PROMPT") != NULL)
+    printf("\n7-Zip Error: %s\n", message);
+  else 
+  {
   #ifdef UNDER_CE
   WCHAR messageW[256 + 4];
   unsigned i;
@@ -174,6 +174,7 @@ static void PrintErrorMessageBox(const char *message)
   #else
   MessageBoxA(0, message, "7-Zip Error", MB_ICONERROR);
   #endif
+  }
 }
 
 static WRes MyCreateDir(const WCHAR *name)
@@ -312,7 +313,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   #ifndef UNDER_CE
   WCHAR workCurDir[MAX_PATH + 32];
   #endif
-  size_t pathLen;
+  size_t pathLen = 0;
   DWORD winRes;
   const wchar_t *cmdLineParams;
   const char *errorMessage = NULL;
@@ -327,12 +328,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   char sfxFNameA[_MAX_FNAME + 5];
   wchar_t sfxExt[_MAX_EXT];
   wchar_t sfxDirPath[_MAX_PATH * 3 + 2];
+  int isun7z = 0;
   int id;
   HRESULT hr;
   LPITEMIDLIST pidl = NULL;
   BOOL b;
+  int argc;
+  wchar_t **wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
   
-  // alternate behavior
+  //alternate behavior, no good for DnD ops
   //if (_isatty(_fileno(stdout)))
   //  if (_wgetenv(L"PROMPT") == NULL)
   //    return 1; //silently quit, avoid extraction
@@ -381,94 +385,120 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     #endif
   }
-  
-  
-  for( id = 0; id < (sizeof(CSIDLtoDIRID)/sizeof(CSIDLtoDIRID[0])); id++ )
-  {
-  hr = SHGetSpecialFolderLocation (NULL, CSIDLtoDIRID[id].CSIDL, &pidl);
-  if (hr == S_OK)
-    {
-      b = SHGetPathFromIDListW (pidl, envDir);
-      if (b)
-        SetEnvironmentVariableW(CSIDLtoDIRID[id].DIRID,envDir);
-      CoTaskMemFree (pidl);
-    }
-  }
   _wsplitpath(sfxPath, sfxDrive, sfxDir, sfxFName, sfxExt);
   _wmakepath(sfxDirPath, sfxDrive, sfxDir, NULL, NULL);
   wcstombs(sfxFNameA, sfxFName, sizeof(sfxFNameA));
   SetEnvironmentVariableW(L"SFXPATH",sfxDirPath);
   SetEnvironmentVariableW(L"SFX",wcscat(sfxFName,sfxExt));
   SetEnvironmentVariableW(L"WORKDIR",workDir);
-  /* PATCH ME un7z: set condition when to be file extractor
-  if (wcsicmp(sfxFName, L"un7z") == 0)
-   */ 
+  if (wcsicmp(sfxFName, L"un7z.exe") == 0)
   {
-    unsigned i;
-    DWORD d;
-    //PATCH ME un7z: replace GetTempPathW with GetCurrentDirectoryW or user argv[2]
-    winRes = GetTempPathW(MAX_PATH, path);
-    if (winRes == 0 || winRes > MAX_PATH)
-      return 1;
-    pathLen = wcslen(path);
-    d = (GetTickCount() << 12) ^ (GetCurrentThreadId() << 14) ^ GetCurrentProcessId();
-    
-    for (i = 0;; i++, d += GetTickCount())
+    isun7z = 1;
+    if (2 > argc) 
     {
-      if (i >= 100)
-      {
-        res = SZ_ERROR_FAIL;
-        break;
-      }
-      wcscpy(path + pathLen, L"7z");
-
-      {
-        wchar_t *s = path + wcslen(path);
-        UInt32 value = d;
-        unsigned k;
-        for (k = 0; k < 8; k++)
+      PrintErrorMessage("un7z.exe file [extractDir]");
+      return 1;
+    }
+    if ((!PathFileExists(wargv[1])) || (PathIsDirectoryW(wargv[1])))
+    {
+      PrintErrorMessage("file is not exists");
+      return 1;
+    }
+    GetFullPathNameW(wargv[1], MAX_PATH * 3 + 2, sfxPath, NULL);
+    if (3 == argc)
+    {
+      GetFullPathNameW(wargv[2], MAX_PATH * 3 + 2, path, NULL);
+      if (!PathIsDirectoryW(path))
+        if (SHCreateDirectoryExW(NULL, path, NULL) != ERROR_SUCCESS)
         {
-          unsigned t = value & 0xF;
-          value >>= 4;
-          s[7 - k] = (wchar_t)((t < 10) ? ('0' + t) : ('A' + (t - 10)));
+          PrintErrorMessage("cannot create extraction directory");
+          return 1;
         }
-        s[k] = '\0';
-      }
-
-      if (DoesFileOrDirExist(path))
-        continue;
-      if (CreateDirectoryW(path, NULL))
+    }
+    else
+    {
+      GetFullPathNameW(wargv[1], MAX_PATH * 3 + 2, path, NULL);
+      PathRemoveFileSpecW(path);
+    }
+    PathAddBackslashW(path);
+    pathLen = wcslen(path);
+  }
+  if (!isun7z)
+  {
+    for (id = 0; id < (sizeof(CSIDLtoDIRID)/sizeof(CSIDLtoDIRID[0])); id++)
+    {
+    hr = SHGetSpecialFolderLocation(NULL, CSIDLtoDIRID[id].CSIDL, &pidl);
+    if (hr == S_OK)
       {
-        wcscat(path, WSTRING_PATH_SEPARATOR);
-        pathLen = wcslen(path);
-        wcscpy(tempDir, path);
-        break;
-      }
-      if (GetLastError() != ERROR_ALREADY_EXISTS)
-      {
-        res = SZ_ERROR_FAIL;
-        break;
+        b = SHGetPathFromIDListW (pidl, envDir);
+        if (b)
+          SetEnvironmentVariableW(CSIDLtoDIRID[id].DIRID,envDir);
+        CoTaskMemFree (pidl);
       }
     }
-    
-    #ifndef UNDER_CE
-    wcscpy(workCurDir, path);
-    #endif
+    {
+      unsigned i;
+      DWORD d;
+      winRes = GetTempPathW(MAX_PATH, path);
+      if (winRes == 0 || winRes > MAX_PATH)
+        return 1;
+      pathLen = wcslen(path);
+      d = (GetTickCount() << 12) ^ (GetCurrentThreadId() << 14) ^ GetCurrentProcessId();
+      
+      for (i = 0;; i++, d += GetTickCount())
+      {
+        if (i >= 100)
+        {
+          res = SZ_ERROR_FAIL;
+          break;
+        }
+        wcscpy(path + pathLen, L"7z");
+
+        {
+          wchar_t *s = path + wcslen(path);
+          UInt32 value = d;
+          unsigned k;
+          for (k = 0; k < 8; k++)
+          {
+            unsigned t = value & 0xF;
+            value >>= 4;
+            s[7 - k] = (wchar_t)((t < 10) ? ('0' + t) : ('A' + (t - 10)));
+          }
+          s[k] = '\0';
+        }
+
+        if (DoesFileOrDirExist(path))
+          continue;
+        if (CreateDirectoryW(path, NULL))
+        {
+          wcscat(path, WSTRING_PATH_SEPARATOR);
+          pathLen = wcslen(path);
+          wcscpy(tempDir, path);
+          break;
+        }
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+          res = SZ_ERROR_FAIL;
+          break;
+        }
+      }
+      
+      #ifndef UNDER_CE
+      wcscpy(workCurDir, path);
+      #endif
+      if (res != SZ_OK)
+        errorMessage = "Can't create temp folder";
+    }
+
     if (res != SZ_OK)
-      errorMessage = "Can't create temp folder";
+    {
+      if (!errorMessage)
+        errorMessage = "Error";
+        PrintErrorMessage(errorMessage);
+      return 1;
+    }
   }
 
-  if (res != SZ_OK)
-  {
-    if (!errorMessage)
-      errorMessage = "Error";
-    if (_isatty(_fileno(stdout)))
-      PrintErrorMessage(errorMessage);
-    else
-      PrintErrorMessageBox(errorMessage);
-    return 1;
-  }
-  //PATCH ME un7z: replace sfxPath with user argv[1] 
   if (InFile_OpenW(&archiveStream.file, sfxPath) != 0)
   {
     errorMessage = "can not open input file";
@@ -477,15 +507,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   else
   {
     UInt64 pos = 0;
-    wchar_t buffer[65];
+    
     if (!FindSignature(&archiveStream.file, &pos))
       res = SZ_ERROR_FAIL;
     else if (File_Seek(&archiveStream.file, (Int64 *)&pos, SZ_SEEK_SET) != 0) 
       res = SZ_ERROR_FAIL;
     if (res != 0)
       errorMessage = "Can't find 7z archive";
-    _ui64tow(pos,buffer,10);
-    SetEnvironmentVariableW(L"SFXSIZE", buffer);
+    if (!isun7z) {
+      wchar_t buffer[65];
+      _ui64tow(pos,buffer,10);
+      SetEnvironmentVariableW(L"SFXSIZE", buffer);
+    }
   }
 
   if (res == SZ_OK)
@@ -597,7 +630,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             break;
           }
         }
-  
+        
         processedSize = outSizeProcessed;
         if (File_Write(&outFile, outBuffer + offset, &processedSize) != 0 || processedSize != outSizeProcessed)
         {
@@ -632,22 +665,24 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         #endif
       }
     }
-
-    if (res == SZ_OK)
+    if (!isun7z)
     {
-      if (executeFileIndex == (UInt32)(Int32)-1)
+      if (res == SZ_OK)
       {
-        errorMessage = "There is no file to execute";
-        res = SZ_ERROR_FAIL;
-      }
-      else
-      {
-        WCHAR *temp = path + pathLen;
-        UInt32 j;
-        SzArEx_GetFileNameUtf16(&db, executeFileIndex, temp);
-        for (j = 0; temp[j] != 0; j++)
-          if (temp[j] == '/')
-            temp[j] = CHAR_PATH_SEPARATOR;
+        if (executeFileIndex == (UInt32)(Int32)-1)
+        {
+          errorMessage = "There is no file to execute";
+          res = SZ_ERROR_FAIL;
+        }
+        else
+        {
+          WCHAR *temp = path + pathLen;
+          UInt32 j;
+          SzArEx_GetFileNameUtf16(&db, executeFileIndex, temp);
+          for (j = 0; temp[j] != 0; j++)
+            if (temp[j] == '/')
+              temp[j] = CHAR_PATH_SEPARATOR;
+        }
       }
     }
     ISzAlloc_Free(&allocImp, outBuffer);
@@ -658,146 +693,146 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   ISzAlloc_Free(&allocImp, lookStream.buf);
 
   File_Close(&archiveStream.file);
-
-  if (res == SZ_OK)
+  if (!isun7z)
   {
-    HANDLE hProcess = 0;
-    
-    #ifndef UNDER_CE
-    WCHAR oldCurDir[MAX_PATH + 2];
-    oldCurDir[0] = 0;
+    if (res == SZ_OK)
     {
-      DWORD needLen = GetCurrentDirectory(MAX_PATH + 1, oldCurDir);
-      if (needLen == 0 || needLen > MAX_PATH)
-        oldCurDir[0] = 0;
-      SetCurrentDirectory(workCurDir);
-    }
-    #endif
-    if (useShellExecute == 3)
-    {
-      STARTUPINFOW si;
-      PROCESS_INFORMATION pi;
-      WCHAR cmdLine[MAX_PATH * 3];
-      wcscpy(cmdLine, path);
-      wcscat(cmdLine, cmdLineParams);
-      memset(&si, 0, sizeof(si));
-      si.cb = sizeof(si);
-      if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == 0)
-        res = SZ_ERROR_FAIL;
-      else
-      {
-        CloseHandle(pi.hThread);
-        hProcess = pi.hProcess;
-      }
-    }
-    else if (useShellExecute == 2)
-    {
-      STARTUPINFOW si;
-      PROCESS_INFORMATION pi;
-      WCHAR cmdLine[MAX_PATH * 3];
-      wcscpy(cmdLine, L"rundll32.exe advpack.dll,LaunchINFSection ");
-      wcscat(cmdLine, path);
-      memset(&si, 0, sizeof(si));
-      si.cb = sizeof(si);
-      if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == 0)
-        res = SZ_ERROR_FAIL;
-      else
-      {
-        CloseHandle(pi.hThread);
-        hProcess = pi.hProcess;
-      }
-    }
-    else if (0 <= useShellExecute <= 1)
-    {
-      PROCESS_INFORMATION pi;
-      WCHAR fcmdLine[32767];
-      WCHAR roscmdLine[32767];
-      WCHAR cwdHERE[32767];
-      WCHAR cwDir[32767];
-      WCHAR newPATH[32767];
-      WCHAR oldPATH[32767];
-      STARTUPINFOW si = { 0 };
-      si.cb = sizeof(si);
-      si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-      si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-      si.hStdOutput =  GetStdHandle(STD_OUTPUT_HANDLE);
-      si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-      wcscpy(fcmdLine, L"/c ");
-      wcscat(fcmdLine, path);
-      wcscat(fcmdLine, cmdLineParams);
-      GetEnvironmentVariableW(L"PATH", oldPATH, sizeof(oldPATH));
-      wcscpy(newPATH, tempDir);
-      wcscpy(cwdHERE, tempDir);
-      wcscat(cwdHERE, L"cwd");
-      PathRemoveBackslash(newPATH);
-      wcscat(newPATH, L";");
-      wcscat(newPATH, tempDir);
-      wcscat(newPATH, L"bin;");
-      wcscat(newPATH, oldPATH);
-      SetEnvironmentVariableW(L"PATH", newPATH);
-      wcscpy(roscmdLine, tempDir);
-      wcscat(roscmdLine, L"bin\\cmd.exe");
-      if (DoesFileOrDirExist(cwdHERE))
-        wcscpy(cwDir, tempDir);
-      else
-        wcscpy(cwDir, workDir);
-      //PATCH ME add busybox bash 
-      if (DoesFileOrDirExist(roscmdLine))
-        SetEnvironmentVariableW(L"COMSPEC", roscmdLine);
-      else
-        GetEnvironmentVariableW(L"COMSPEC", roscmdLine, sizeof(roscmdLine));
-      memset(&si, 0, sizeof(si));
-      si.cb = sizeof(si);
-      if (CreateProcessW(roscmdLine, fcmdLine, NULL, NULL, FALSE, 0, NULL, cwDir, &si, &pi) == 0)
-        res = SZ_ERROR_FAIL;
-      else
-      {
-        CloseHandle(pi.hThread);
-        hProcess = pi.hProcess;
-      }
-    }
-    else if (3 < useShellExecute < 8)
-    {
-      SHELLEXECUTEINFO ei;
-      UINT32 executeRes;
-      BOOL success;
+      HANDLE hProcess = 0;
       
-      memset(&ei, 0, sizeof(ei));
-      ei.cbSize = sizeof(ei);
-      ei.lpFile = path;
-      ei.fMask = SEE_MASK_NOCLOSEPROCESS
-          #ifndef UNDER_CE
-          | SEE_MASK_FLAG_DDEWAIT
-          #endif
-          | SEE_MASK_NO_CONSOLE
-          ;
-      if (wcslen(cmdLineParams) != 0)
-        ei.lpParameters = cmdLineParams;
-      ei.nShow = SW_SHOWNORMAL; /* SW_HIDE; */
-      success = ShellExecuteEx(&ei);
-      executeRes = (UINT32)(UINT_PTR)ei.hInstApp;
-      if (!success || (executeRes <= 32 && executeRes != 0))  /* executeRes = 0 in Windows CE */
-        res = SZ_ERROR_FAIL;
-      else
-        hProcess = ei.hProcess;
+      #ifndef UNDER_CE
+      WCHAR oldCurDir[MAX_PATH + 2];
+      oldCurDir[0] = 0;
+      {
+        DWORD needLen = GetCurrentDirectory(MAX_PATH + 1, oldCurDir);
+        if (needLen == 0 || needLen > MAX_PATH)
+          oldCurDir[0] = 0;
+        SetCurrentDirectory(workCurDir);
+      }
+      #endif
+      if (useShellExecute == 3)
+      {
+        STARTUPINFOW si;
+        PROCESS_INFORMATION pi;
+        WCHAR cmdLine[MAX_PATH * 3];
+        wcscpy(cmdLine, path);
+        wcscat(cmdLine, cmdLineParams);
+        memset(&si, 0, sizeof(si));
+        si.cb = sizeof(si);
+        if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == 0)
+          res = SZ_ERROR_FAIL;
+        else
+        {
+          CloseHandle(pi.hThread);
+          hProcess = pi.hProcess;
+        }
+      }
+      else if (useShellExecute == 2)
+      {
+        STARTUPINFOW si;
+        PROCESS_INFORMATION pi;
+        WCHAR cmdLine[MAX_PATH * 3];
+        wcscpy(cmdLine, L"rundll32.exe advpack.dll,LaunchINFSection ");
+        wcscat(cmdLine, path);
+        memset(&si, 0, sizeof(si));
+        si.cb = sizeof(si);
+        if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == 0)
+          res = SZ_ERROR_FAIL;
+        else
+        {
+          CloseHandle(pi.hThread);
+          hProcess = pi.hProcess;
+        }
+      }
+      else if (0 <= useShellExecute <= 1)
+      {
+        PROCESS_INFORMATION pi;
+        WCHAR fcmdLine[32767];
+        WCHAR roscmdLine[32767];
+        WCHAR cwdHERE[32767];
+        WCHAR cwDir[32767];
+        WCHAR newPATH[32767];
+        WCHAR oldPATH[32767];
+        STARTUPINFOW si = { 0 };
+        si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+        si.hStdOutput =  GetStdHandle(STD_OUTPUT_HANDLE);
+        si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+        wcscpy(fcmdLine, L"/c ");
+        wcscat(fcmdLine, path);
+        wcscat(fcmdLine, cmdLineParams);
+        GetEnvironmentVariableW(L"PATH", oldPATH, sizeof(oldPATH));
+        wcscpy(newPATH, tempDir);
+        wcscpy(cwdHERE, tempDir);
+        wcscat(cwdHERE, L"cwd");
+        PathRemoveBackslash(newPATH);
+        wcscat(newPATH, L";");
+        wcscat(newPATH, tempDir);
+        wcscat(newPATH, L"bin;");
+        wcscat(newPATH, oldPATH);
+        SetEnvironmentVariableW(L"PATH", newPATH);
+        wcscpy(roscmdLine, tempDir);
+        wcscat(roscmdLine, L"bin\\cmd.exe");
+        if (DoesFileOrDirExist(cwdHERE))
+          wcscpy(cwDir, tempDir);
+        else
+          wcscpy(cwDir, workDir);
+        if (DoesFileOrDirExist(roscmdLine))
+          SetEnvironmentVariableW(L"COMSPEC", roscmdLine);
+        else
+          GetEnvironmentVariableW(L"COMSPEC", roscmdLine, sizeof(roscmdLine));
+        memset(&si, 0, sizeof(si));
+        si.cb = sizeof(si);
+        if (CreateProcessW(roscmdLine, fcmdLine, NULL, NULL, FALSE, 0, NULL, cwDir, &si, &pi) == 0)
+          res = SZ_ERROR_FAIL;
+        else
+        {
+          CloseHandle(pi.hThread);
+          hProcess = pi.hProcess;
+        }
+      }
+      else if (3 < useShellExecute < 8)
+      {
+        SHELLEXECUTEINFO ei;
+        UINT32 executeRes;
+        BOOL success;
+        
+        memset(&ei, 0, sizeof(ei));
+        ei.cbSize = sizeof(ei);
+        ei.lpFile = path;
+        ei.fMask = SEE_MASK_NOCLOSEPROCESS
+            #ifndef UNDER_CE
+            | SEE_MASK_FLAG_DDEWAIT
+            #endif
+            | SEE_MASK_NO_CONSOLE
+            ;
+        if (wcslen(cmdLineParams) != 0)
+          ei.lpParameters = cmdLineParams;
+        ei.nShow = SW_SHOWNORMAL; /* SW_HIDE; */
+        success = ShellExecuteEx(&ei);
+        executeRes = (UINT32)(UINT_PTR)ei.hInstApp;
+        if (!success || (executeRes <= 32 && executeRes != 0))  /* executeRes = 0 in Windows CE */
+          res = SZ_ERROR_FAIL;
+        else
+          hProcess = ei.hProcess;
+      }
+      
+      if (hProcess != 0)
+      {
+        WaitForSingleObject(hProcess, INFINITE);
+        if (!GetExitCodeProcess(hProcess, &exitCode))
+          exitCode = 1;
+        CloseHandle(hProcess);
+      }
+      
+      #ifndef UNDER_CE
+      SetCurrentDirectory(oldCurDir);
+      #endif
     }
-    
-    if (hProcess != 0)
-    {
-      WaitForSingleObject(hProcess, INFINITE);
-      if (!GetExitCodeProcess(hProcess, &exitCode))
-        exitCode = 1;
-      CloseHandle(hProcess);
-    }
-    
-    #ifndef UNDER_CE
-    SetCurrentDirectory(oldCurDir);
-    #endif
+
+    path[pathLen] = L'\0';
+    RemoveDirWithSubItems(path);
   }
-
-  path[pathLen] = L'\0';
-  RemoveDirWithSubItems(path);
-
   if (res == SZ_OK)
     return (int)exitCode;
   
@@ -815,12 +850,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
  
     if (errorMessage)
-    {
-      if (_isatty(_fileno(stdout)))
         PrintErrorMessage(errorMessage);
-      else
-        PrintErrorMessageBox(errorMessage);
-    }
   }
   return 1;
 }
